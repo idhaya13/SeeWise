@@ -1,0 +1,94 @@
+/* src/pages/MyList.css */
+.mylist-page {
+  padding-top: 2rem;
+  padding-bottom: 5rem;
+}
+
+.mylist-stats {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.stat-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1.25rem 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex: 1;
+  max-width: 200px;
+}
+
+.stat-icon {
+  font-size: 2rem;
+}
+
+.stat-num {
+  font-family: var(--font-display);
+  font-size: 2rem;
+  font-weight: 900;
+  line-height: 1;
+  color: var(--accent);
+}
+
+.stat-label {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  margin-top: 0.15rem;
+}
+
+.tab-badge {
+  background: var(--surface);
+  border-radius: 100px;
+  padding: 0.1rem 0.5rem;
+  font-size: 0.7rem;
+  font-family: var(--font-mono);
+  margin-left: 0.25rem;
+}
+
+.tab.active .tab-badge {
+  background: rgba(255,255,255,0.2);
+}
+
+.mylist-count {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  margin-bottom: 1.25rem;
+  font-family: var(--font-mono);
+}
+
+.mylist-item-wrapper {
+  position: relative;
+}
+
+.remove-btn {
+  position: absolute;
+  bottom: 0.6rem;
+  right: 0.6rem;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: rgba(239, 68, 68, 0.15);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  color: rgb(239, 68, 68);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  opacity: 0;
+  transition: all 0.2s ease;
+  z-index: 10;
+  backdrop-filter: blur(4px);
+}
+
+.mylist-item-wrapper:hover .remove-btn {
+  opacity: 1;
+}
+
+.remove-btn:hover {
+  background: rgba(239, 68, 68, 0.3);
+  transform: scale(1.1);
+}
