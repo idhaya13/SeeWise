@@ -1,24 +1,47 @@
 // src/components/MediaCard.js
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { FiBookmark, FiStar } from 'react-icons/fi';
+import { FiStar } from 'react-icons/fi';
 import { BsBookmark, BsBookmarkFill } from 'react-icons/bs';
 import useStore from '../store/useStore';
 import toast from 'react-hot-toast';
 
 export default function MediaCard({ item, type = 'movie', showTitle = true }) {
-  const { addToWatchlist, removeFromWatchlist, addToReadlist, removeFromReadlist, isInWatchlist, isInReadlist } = useStore();
+  const {
+    addToWatchlist,
+    removeFromWatchlist,
+    addToReadlist,
+    removeFromReadlist,
+    isInWatchlist,
+    isInReadlist,
+    setRating,
+    getRating,
+    currentUser,
+    addToUserSavedList,
+    removeFromUserSavedList,
+    removeFromPlaylist,
+  } = useStore();
 
   const isBook = type === 'book';
-  const saved = isBook ? isInReadlist(item.id) : isInWatchlist(item.id, type);
+  const mediaId = item.id || item.imdbID;
+  const activePlaylist = currentUser?.playlists?.find((pl) => pl.id === currentUser?.activePlaylistId) || null;
+  const playlistHasItem = activePlaylist?.items?.some((it) => (it.id || it.imdbID) === mediaId);
+  const userRating = getRating(mediaId);
+  const saved = currentUser
+    ? playlistHasItem
+    : (isBook ? isInReadlist(item.id) : isInWatchlist(mediaId, type));
 
-  const detailPath = isBook ? `/book/${item.id}` : `/movie/${item.id}?type=${type}`;
+  const detailPath = isBook ? `/book/${item.id}` : `/movie/${mediaId}?type=${type}`;
 
   const coverUrl = isBook
     ? item.cover || item.coverMedium
     : item.poster_path
-    ? `https://image.tmdb.org/t/p/w342${item.poster_path}`
-    : null;
+      ? item.poster_path.startsWith('http')
+        ? item.poster_path
+        : `https://image.tmdb.org/t/p/w342${item.poster_path}`
+      : item.Poster && item.Poster !== 'N/A'
+        ? item.Poster
+        : null;
 
   const title = isBook ? item.title : item.title || item.name;
   const year = isBook
@@ -30,20 +53,40 @@ export default function MediaCard({ item, type = 'movie', showTitle = true }) {
   const handleToggleSave = (e) => {
     e.preventDefault();
     e.stopPropagation();
+
     if (isBook) {
       if (saved) {
         removeFromReadlist(item.id);
+        if (currentUser) {
+          removeFromPlaylist(mediaId, currentUser.activePlaylistId);
+          removeFromUserSavedList(mediaId);
+        }
         toast('Removed from Reading List');
       } else {
-        addToReadlist({ ...item, mediaType: 'book' });
-        toast.success('Added to Reading List 📚');
+        addToReadlist({ ...item, mediaType: 'book', id: mediaId });
+        if (currentUser) {
+          addToUserSavedList({ ...item, mediaType: 'book', id: mediaId });
+          toast.success(`Added to ${activePlaylist?.name || 'playlist'} 📚`);
+        } else {
+          toast.success('Added to Reading List 📚');
+        }
       }
+      return;
+    }
+
+    if (saved) {
+      removeFromWatchlist(item.id, type);
+      if (currentUser) {
+        removeFromPlaylist(mediaId, currentUser.activePlaylistId);
+        removeFromUserSavedList(mediaId);
+      }
+      toast('Removed from Watchlist');
     } else {
-      if (saved) {
-        removeFromWatchlist(item.id, type);
-        toast('Removed from Watchlist');
+      addToWatchlist({ ...item, mediaType: type, id: mediaId });
+      if (currentUser) {
+        addToUserSavedList({ ...item, mediaType: type, id: mediaId });
+        toast.success(`Added to ${activePlaylist?.name || 'playlist'} 🎬`);
       } else {
-        addToWatchlist({ ...item, mediaType: type });
         toast.success('Added to Watchlist 🎬');
       }
     }
@@ -107,6 +150,33 @@ export default function MediaCard({ item, type = 'movie', showTitle = true }) {
                 )}
               </div>
             </div>
+            {currentUser && (
+              <div className="user-rating" style={{ marginTop: '0.5rem' }}>
+                <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Your rating:</span>
+                <div style={{ display: 'inline-flex', gap: '0.15rem', marginLeft: '0.4rem' }}>
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <button
+                      key={star}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        setRating(mediaId, star);
+                        toast.success(`Rated ${star}/5`);
+                      }}
+                      style={{
+                        border: 'none',
+                        background: 'transparent',
+                        color: userRating >= star ? 'var(--gold)' : 'var(--text-secondary)',
+                        cursor: 'pointer',
+                        fontSize: '0.95rem',
+                      }}
+                    >
+                      ★
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
           </>
         )}
       </div>

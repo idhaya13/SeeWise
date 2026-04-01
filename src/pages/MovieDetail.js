@@ -5,6 +5,7 @@ import { useQuery } from 'react-query';
 import { FiStar, FiCalendar, FiClock, FiPlay, FiX, FiArrowLeft } from 'react-icons/fi';
 import { BsBookmark, BsBookmarkFill } from 'react-icons/bs';
 import tmdbService from '../services/tmdb';
+import omdbService from '../services/omdb';
 import MediaCard from '../components/MediaCard';
 import useStore from '../store/useStore';
 import toast from 'react-hot-toast';
@@ -15,11 +16,21 @@ export default function MovieDetail() {
   const [searchParams] = useSearchParams();
   const type = searchParams.get('type') || 'movie';
   const [showTrailer, setShowTrailer] = useState(false);
-  const { addToWatchlist, removeFromWatchlist, isInWatchlist } = useStore();
+  const { addToWatchlist, removeFromWatchlist, isInWatchlist, setRating, getRating, currentUser } = useStore();
+
+  const isImdb = id?.startsWith('tt');
 
   const { data: item, isLoading } = useQuery(
     ['media-detail', id, type],
-    () => type === 'tv' ? tmdbService.getTVDetails(id) : tmdbService.getMovieDetails(id),
+    () => {
+      if (type === 'tv') {
+        return tmdbService.getTVDetails(id);
+      }
+      if (type === 'movie' && isImdb) {
+        return omdbService.getMovieById(id);
+      }
+      return tmdbService.getMovieDetails(id);
+    },
     { enabled: !!id }
   );
 
@@ -33,22 +44,37 @@ export default function MovieDetail() {
 
   if (!item) return null;
 
-  const title = item.title || item.name;
-  const year = (item.release_date || item.first_air_date || '').substring(0, 4);
-  const runtime = item.runtime ? `${Math.floor(item.runtime / 60)}h ${item.runtime % 60}m` : null;
-  const backdropUrl = tmdbService.getBackdropUrl(item.backdrop_path);
-  const posterUrl = tmdbService.getImageUrl(item.poster_path, 'w500');
-  const trailerKey = tmdbService.getTrailerKey(item.videos);
-  const isSaved = isInWatchlist(item.id, type);
-  const similar = item.similar?.results?.slice(0, 8) || [];
-  const cast = item.credits?.cast?.slice(0, 8) || [];
+  const isOmdb = item.imdbID && !item.id;
+  const title = item.title || item.name || item.Title;
+  const year = (item.release_date || item.first_air_date || item.Year || '').substring(0, 4);
+  const runtime = isOmdb && item.Runtime ? item.Runtime : item.runtime ? `${Math.floor(item.runtime / 60)}h ${item.runtime % 60}m` : null;
+  const backdropUrl = isOmdb ? null : tmdbService.getBackdropUrl(item.backdrop_path);
+  const posterUrl = isOmdb
+    ? (item.Poster && item.Poster !== 'N/A' ? item.Poster : null)
+    : tmdbService.getImageUrl(item.poster_path, 'w500');
+  const trailerKey = isOmdb ? null : tmdbService.getTrailerKey(item.videos);
+  const itemKey = item.imdbID || item.id;
+  const isSaved = isInWatchlist(itemKey, type);
+  const userRating = getRating(itemKey);
+  const similar = isOmdb ? [] : item.similar?.results?.slice(0, 8) || [];
+  const cast = isOmdb ? [] : item.credits?.cast?.slice(0, 8) || [];
+
+  const handleRate = (ratingValue) => {
+    if (!currentUser) {
+      toast.error('Please login to rate movies.');
+      return;
+    }
+    if (!itemKey) return;
+    setRating(itemKey, ratingValue);
+    toast.success(`Your rating (${ratingValue}/5) was saved!`);
+  };
 
   const handleToggleSave = () => {
     if (isSaved) {
-      removeFromWatchlist(item.id, type);
+      removeFromWatchlist(itemKey, type);
       toast('Removed from Watchlist');
     } else {
-      addToWatchlist({ ...item, mediaType: type });
+      addToWatchlist({ ...item, id: itemKey, mediaType: type });
       toast.success('Added to Watchlist 🎬');
     }
   };
@@ -154,6 +180,29 @@ export default function MovieDetail() {
                 {isSaved ? <BsBookmarkFill /> : <BsBookmark />}
                 {isSaved ? 'In Watchlist' : 'Add to Watchlist'}
               </button>
+            </div>
+
+            {/* User Rating */}
+            <div className="detail-rating" style={{ marginTop: '1rem' }}>
+              <div className="detail-rating-label">Your Rating:</div>
+              <div className="rating-stars">
+                {[1, 2, 3, 4, 5].map((star) => (
+                  <button
+                    key={star}
+                    className={`rating-star ${userRating >= star ? 'active' : ''}`}
+                    type="button"
+                    onClick={() => handleRate(star)}
+                  >
+                    ★
+                  </button>
+                ))}
+              </div>
+              {userRating > 0 && (
+                <div className="detail-rating-value">You rated this {userRating}/5</div>
+              )}
+              {!currentUser && (
+                <div className="detail-rating-note">Login to save ratings permanently.</div>
+              )}
             </div>
           </div>
         </div>

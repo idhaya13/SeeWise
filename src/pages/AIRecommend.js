@@ -1,9 +1,9 @@
 // src/pages/AIRecommend.js
 import React, { useState, useEffect } from 'react';
-import { useSearchParams, Link } from 'react-router-dom';
-import { FiZap, FiX, FiPlus, FiFilm, FiBook, FiRefreshCw } from 'react-icons/fi';
+import { useSearchParams } from 'react-router-dom';
+import { FiZap, FiX, FiPlus, FiRefreshCw } from 'react-icons/fi';
 import { BsBookmark, BsBookmarkFill } from 'react-icons/bs';
-import claudeService from '../services/claude';
+import aiService from '../services/aiService';
 import useStore from '../store/useStore';
 import toast from 'react-hot-toast';
 import './AIRecommend.css';
@@ -23,7 +23,8 @@ const MOODS = [
 
 const CONTENT_TYPES = [
   { key: 'all', label: '🎬📚 Everything', desc: 'Movies, TV & Books' },
-  { key: 'movies', label: '🎬 Movies & TV', desc: 'Films and shows only' },
+  { key: 'movies', label: '🎬 Movies', desc: 'Films only' },
+  { key: 'tv', label: '📺 TV Shows', desc: 'TV shows only' },
   { key: 'books', label: '📚 Books', desc: 'Books and novels only' },
 ];
 
@@ -48,7 +49,15 @@ export default function AIRecommend() {
   const [loading, setLoading] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
 
-  const { likedTitles, addToWatchlist, addToReadlist, isInWatchlist, isInReadlist } = useStore();
+  const {
+    likedTitles,
+    addToWatchlist,
+    addToReadlist,
+    isInWatchlist,
+    isInReadlist,
+    language,
+    currentUser,
+  } = useStore();
 
   // Pre-fill from URL mood param
   useEffect(() => {
@@ -58,7 +67,7 @@ export default function AIRecommend() {
     }
     // Seed liked inputs from store
     if (likedTitles.length) setLikedInputs(likedTitles.slice(0, 5));
-  }, []);
+  }, [moodParam, likedTitles]);
 
   const addInput = () => {
     if (currentInput.trim() && !likedInputs.includes(currentInput.trim())) {
@@ -85,18 +94,27 @@ export default function AIRecommend() {
     setRecommendations([]);
 
     try {
-      const results = await claudeService.getRecommendations({
-        liked: likedInputs,
+      const userSavedTitles = currentUser?.savedList?.map((item) => item.title).filter(Boolean) || [];
+      const userSavedBooks = currentUser?.savedList?.filter((item) => item.mediaType === 'book').map((item) => item.title) || [];
+      const likedPlusSaved = Array.from(new Set([...likedInputs, ...userSavedTitles]));
+
+      const results = await aiService.getRecommendations({
+        liked: likedPlusSaved,
+        userSavedMovies: userSavedTitles,
+        userSavedBooks,
+        userRatings: currentUser?.ratings || {},
         mood: selectedMood || customInput,
         type: contentType,
+        language,
       });
       setRecommendations(results);
       if (results.length === 0) {
-        toast.error('No recommendations found. Try different inputs!');
+        toast.error('No matches found for your strict criteria. Try broader filters!');
       }
     } catch (err) {
-      toast.error('Failed to get recommendations. Check your API key!');
-      console.error(err);
+      const errorMsg = err.message || 'Check your internet or API key';
+      toast.error(`AI curating failed: ${errorMsg}`);
+      console.error('AI Recommendation UI Error:', err);
     } finally {
       setLoading(false);
     }
@@ -138,7 +156,7 @@ export default function AIRecommend() {
               <FiZap size={28} />
             </div>
             <div>
-              <div className="label">Powered by Claude AI</div>
+              <div className="label">Intelligent Discovery AI</div>
               <h1 className="display-title ai-title">
                 Your Personal<br />
                 <span className="ai-title-accent">Curator</span>

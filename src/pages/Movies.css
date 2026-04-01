@@ -46,3 +46,30 @@
     overflow-x: auto;
   }
 }
+
+.filters-row {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+  justify-content: space-between;
+}
+
+.regional-filter {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.regional-filter-label {
+  font-size: 0.9rem;
+  color: var(--text-primary);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.regional-filter-note {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+}

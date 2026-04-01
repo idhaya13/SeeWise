@@ -116,8 +116,15 @@
 }
 
 @keyframes slideInSearch {
-  from { opacity: 0; transform: translateX(20px); }
-  to { opacity: 1; transform: translateX(0); }
+  from {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
 }
 
 .nav-search-input {
@@ -137,6 +144,117 @@
   color: var(--text-muted);
 }
 
+/* LANGUAGE DROPDOWN */
+.lang-dropdown {
+  position: relative;
+}
+
+.lang-trigger {
+  gap: 0.3rem;
+  padding: 0 0.8rem;
+  border-radius: 100px;
+  background: var(--surface);
+  border: 1px solid transparent;
+  width: auto;
+  height: 38px;
+}
+
+.lang-trigger.active {
+  border-color: var(--accent);
+  background: var(--accent-dim);
+}
+
+.lang-flag {
+  font-size: 1.1rem;
+}
+
+.chevron {
+  transition: transform 0.2s ease;
+  opacity: 0.6;
+}
+
+.chevron.open {
+  transform: rotate(180deg);
+}
+
+.lang-menu {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  width: 280px;
+  background: rgba(15, 15, 25, 0.95);
+  backdrop-filter: blur(20px);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 0.75rem;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+  animation: dropdownFade 0.2s ease-out;
+  z-index: 1000;
+}
+
+@keyframes dropdownFade {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.lang-menu-header {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  letter-spacing: 0.05em;
+  margin-bottom: 0.75rem;
+  padding: 0 0.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.lang-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.4rem;
+}
+
+.lang-option {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.6rem 0.8rem;
+  border-radius: 10px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--text-secondary);
+  font-family: inherit;
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: left;
+}
+
+.lang-option:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text-primary);
+}
+
+.lang-option.active {
+  background: var(--accent-dim);
+  color: var(--accent);
+  border-color: var(--accent);
+}
+
+.option-flag {
+  font-size: 1rem;
+}
+
 /* RESPONSIVE */
 @media (max-width: 900px) {
   .nav-links {
@@ -150,10 +268,15 @@
 
 @media (max-width: 480px) {
   .nav-search-input {
-    width: 180px;
+    width: 150px;
   }
 
   .ai-btn .btn-label {
     display: none;
+  }
+
+  .lang-menu {
+    width: 240px;
+    right: -40px;
   }
 }

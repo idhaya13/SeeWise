@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useQuery } from 'react-query';
-import { FiPlay, FiPlus, FiInfo, FiZap, FiTrendingUp, FiBook, FiChevronRight } from 'react-icons/fi';
+import { FiInfo, FiZap, FiTrendingUp, FiBook, FiChevronRight } from 'react-icons/fi';
 import { BsBookmark, BsBookmarkFill } from 'react-icons/bs';
 import tmdbService from '../services/tmdb';
 import booksService from '../services/books';
@@ -12,16 +12,16 @@ import toast from 'react-hot-toast';
 import './Home.css';
 
 const MOODS = ['😊 Feel Good', '😱 Thrilling', '🥺 Emotional', '🤣 Comedy', '🌌 Epic', '🧠 Mind-Bending', '💕 Romance', '👻 Scary'];
-const POPULAR_SUBJECTS = ['fiction', 'mystery', 'science-fiction', 'romance', 'thriller', 'biography'];
 
 export default function Home() {
   const [heroIndex, setHeroIndex] = useState(0);
   const [heroLoaded, setHeroLoaded] = useState(false);
-  const { addToWatchlist, removeFromWatchlist, isInWatchlist } = useStore();
+  const { addToWatchlist, removeFromWatchlist, isInWatchlist, contentLanguage } = useStore();
 
-  const { data: trending = [] } = useQuery('trending-movies', () => tmdbService.getTrending(), { staleTime: 5 * 60 * 1000 });
-  const { data: trendingTV = [] } = useQuery('trending-tv', () => tmdbService.getTrendingTV(), { staleTime: 5 * 60 * 1000 });
-  const { data: topRated = [] } = useQuery('top-rated', () => tmdbService.getTopRated(), { staleTime: 10 * 60 * 1000 });
+  // Keep core home feed in English by default; regional fetch is done in Movies via OMDB
+  const { data: trending = [] } = useQuery(['trending-movies', 'en'], () => tmdbService.getTrending('en'), { staleTime: 5 * 60 * 1000 });
+  const { data: trendingTV = [] } = useQuery(['trending-tv', 'en'], () => tmdbService.getTrendingTV('en'), { staleTime: 5 * 60 * 1000 });
+  const { data: topRated = [] } = useQuery(['top-rated', 'en'], () => tmdbService.getTopRated('en'), { staleTime: 10 * 60 * 1000 });
   const { data: featuredBooks = [] } = useQuery('featured-books', () => booksService.getTrendingBySubject('fiction'), { staleTime: 10 * 60 * 1000 });
   const { data: scifiBooks = [] } = useQuery('scifi-books', () => booksService.getTrendingBySubject('science-fiction'), { staleTime: 10 * 60 * 1000 });
 

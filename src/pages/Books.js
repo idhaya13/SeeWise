@@ -26,13 +26,23 @@ export default function Books() {
   const [searchQuery, setSearchQuery] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
 
-  const { data: subjectBooks = [], isLoading } = useQuery(
+  const {
+    data: subjectBooks = [],
+    isLoading,
+    isError: isSubjectError,
+    error: subjectError,
+  } = useQuery(
     ['books-subject', activeSubject],
     () => booksService.getTrendingBySubject(activeSubject),
     { staleTime: 10 * 60 * 1000 }
   );
 
-  const { data: searchResults = [], isLoading: searching } = useQuery(
+  const {
+    data: searchResults = [],
+    isLoading: searching,
+    isError: isSearchError,
+    error: searchError,
+  } = useQuery(
     ['books-search', searchTerm],
     () => booksService.searchBooks(searchTerm),
     { enabled: !!searchTerm, staleTime: 5 * 60 * 1000 }
@@ -110,7 +120,17 @@ export default function Books() {
       )}
 
       {/* Grid */}
-      {isLoading2 ? (
+      {(isSubjectError || isSearchError) ? (
+        <div className="empty-state">
+          <div className="empty-state-icon">⚠️</div>
+          <h3>Could not load books right now</h3>
+          <p>
+            {isSubjectError && `Subject load failed: ${(subjectError?.message || 'Unknown error')}`}
+            {isSearchError && `Search failed: ${(searchError?.message || 'Unknown error')}`}
+          </p>
+          <p>Try again, check your network, or set <code>REACT_APP_OPENLIBRARY_CORS_PROXY=false</code> in .env if you are on a server-side proxy.</p>
+        </div>
+      ) : isLoading2 ? (
         <div className="grid grid-4">
           {Array(12).fill(0).map((_, i) => (
             <div key={i} className="skeleton skeleton-card" />

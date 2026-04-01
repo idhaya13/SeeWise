@@ -61,6 +61,168 @@ const useStore = create(
       theme: 'dark',
       toggleTheme: () =>
         set({ theme: get().theme === 'dark' ? 'light' : 'dark' }),
+
+      // --- Global Language ---
+      language: 'en',
+      setLanguage: (lang) => set({ language: lang }),
+
+      // --- Regional content language for movie/tv selection ---
+      contentLanguage: 'en',
+      setContentLanguage: (lang) => set({ contentLanguage: lang }),
+      
+      // --- Regional filter for language-specific content ---
+      regionalOnly: false,
+      setRegionalOnly: (enabled) => set({ regionalOnly: enabled }),
+
+      // --- Auth & User List ---
+      users: [],
+      currentUser: null,
+      loginUser: (username, password) => {
+        const found = get().users.find((u) => u.username === username && u.password === password);
+        if (!found) return false;
+        const normalized = {
+          ...found,
+          playlists: found.playlists || [{ id: 'playlist-default', name: 'Default List', items: [] }],
+          activePlaylistId: found.activePlaylistId || (found.playlists?.[0]?.id || 'playlist-default'),
+          ratings: found.ratings || {},
+          savedList: found.savedList || [],
+        };
+        set({
+          currentUser: normalized,
+          users: get().users.map((u) => (u.id === normalized.id ? normalized : u)),
+        });
+        return true;
+      },
+      registerUser: (username, password) => {
+        if (get().users.some((u) => u.username === username)) return false;
+        const defaultPlaylist = {
+          id: 'playlist-default',
+          name: 'Default List',
+          items: [],
+        };
+        const newUser = {
+          id: Date.now().toString(),
+          username,
+          password,
+          savedList: [],
+          playlists: [defaultPlaylist],
+          activePlaylistId: defaultPlaylist.id,
+          ratings: {},
+        };
+        set({ users: [...get().users, newUser], currentUser: newUser });
+        return true;
+      },
+      logoutUser: () => set({ currentUser: null }),
+      setActivePlaylist: (playlistId) => {
+        const user = get().currentUser;
+        if (!user) return;
+        const playlists = Array.isArray(user.playlists) ? user.playlists : [];
+        const exists = playlists.some((pl) => pl.id === playlistId);
+        if (!exists) return;
+        const updatedUser = { ...user, activePlaylistId: playlistId, playlists };
+        set({ currentUser: updatedUser, users: get().users.map((u) => (u.id === user.id ? updatedUser : u)) });
+      },
+      createPlaylist: (name) => {
+        const user = get().currentUser;
+        if (!user || !name.trim()) return;
+        const playlists = Array.isArray(user.playlists) ? user.playlists : [];
+        const playlistId = `playlist-${Date.now()}`;
+        const newPlaylist = { id: playlistId, name: name.trim(), items: [] };
+        const updatedUser = {
+          ...user,
+          playlists: [...playlists, newPlaylist],
+          activePlaylistId: playlistId,
+        };
+        set({ currentUser: updatedUser, users: get().users.map((u) => (u.id === user.id ? updatedUser : u)) });
+      },
+      deletePlaylist: (playlistId) => {
+        const user = get().currentUser;
+        if (!user || playlistId === 'playlist-default') return;
+        const playlists = Array.isArray(user.playlists) ? user.playlists : [];
+        const updatedPlaylists = playlists.filter((pl) => pl.id !== playlistId);
+        const activePlaylistId = user.activePlaylistId === playlistId ? (updatedPlaylists[0]?.id || 'playlist-default') : user.activePlaylistId;
+        const updatedUser = { ...user, playlists: updatedPlaylists, activePlaylistId };
+        set({ currentUser: updatedUser, users: get().users.map((u) => (u.id === user.id ? updatedUser : u)) });
+      },
+      addToPlaylist: (itemId, item, playlistId) => {
+        const user = get().currentUser;
+        if (!user || !playlistId) return;
+        const playlists = user.playlists.map((pl) => {
+          if (pl.id !== playlistId) return pl;
+          if (pl.items.some((i) => (i.id || i.imdbID) === itemId)) return pl;
+          return { ...pl, items: [...pl.items, item] };
+        });
+        const updatedUser = { ...user, playlists };
+        set({ currentUser: updatedUser, users: get().users.map((u) => (u.id === user.id ? updatedUser : u)) });
+      },
+      removeFromPlaylist: (itemId, playlistId) => {
+        const user = get().currentUser;
+        if (!user || !playlistId) return;
+        const playlists = user.playlists.map((pl) => {
+          if (pl.id !== playlistId) return pl;
+          return { ...pl, items: pl.items.filter((i) => (i.id || i.imdbID) !== itemId) };
+        });
+        const updatedUser = { ...user, playlists };
+        set({ currentUser: updatedUser, users: get().users.map((u) => (u.id === user.id ? updatedUser : u)) });
+      },
+      addToUserSavedList: (item) => {
+        const user = get().currentUser;
+        if (!user) return;
+        const normalizedUser = {
+          ...user,
+          playlists: user.playlists || [{ id: 'playlist-default', name: 'Default List', items: [] }],
+          activePlaylistId: user.activePlaylistId || (user.playlists?.[0]?.id || 'playlist-default'),
+          ratings: user.ratings || {},
+          savedList: user.savedList || [],
+        };
+        const idKey = item.id || item.imdbID;
+        let updatedUser = normalizedUser;
+
+        if (!normalizedUser.savedList.some((i) => (i.id || i.imdbID) === idKey)) {
+          updatedUser = { ...normalizedUser, savedList: [...normalizedUser.savedList, item] };
+          set({ currentUser: updatedUser, users: get().users.map((u) => (u.id === normalizedUser.id ? updatedUser : u)) });
+        }
+
+        return get().addToPlaylist(idKey, item, updatedUser.activePlaylistId);
+      },
+      removeFromUserSavedList: (itemId) => {
+        const user = get().currentUser;
+        if (!user) return;
+        const updatedUser = {
+          ...user,
+          savedList: user.savedList.filter((i) => (i.id || i.imdbID) !== itemId),
+          playlists: user.playlists.map((pl) => ({
+            ...pl,
+            items: pl.items.filter((it) => (it.id || it.imdbID) !== itemId),
+          })),
+        };
+        set({ currentUser: updatedUser, users: get().users.map((u) => (u.id === user.id ? updatedUser : u)) });
+      },
+      // --- Ratings ---
+      ratings: {}, // global fallback for unauthenticated users
+      setRating: (itemId, rating) => {
+        const user = get().currentUser;
+        if (user) {
+          const updatedUser = {
+            ...user,
+            ratings: {
+              ...user.ratings,
+              [itemId]: rating,
+            },
+          };
+          set({
+            currentUser: updatedUser,
+            users: get().users.map((u) => (u.id === user.id ? updatedUser : u)),
+          });
+        } else {
+          set({ ratings: { ...get().ratings, [itemId]: rating } });
+        }
+      },
+      getRating: (itemId) => {
+        const user = get().currentUser;
+        if (user && user.ratings) return user.ratings[itemId] || 0;
+        return get().ratings[itemId] || 0;
+      },
     }),
     {
       name: 'seewise-storage',
@@ -69,6 +231,11 @@ const useStore = create(
         readlist: state.readlist,
         likedTitles: state.likedTitles,
         theme: state.theme,
+        language: state.language,
+        contentLanguage: state.contentLanguage,
+        users: state.users,
+        currentUser: state.currentUser,
+        ratings: state.ratings,
       }),
     }
   )

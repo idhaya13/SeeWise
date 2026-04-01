@@ -9,11 +9,47 @@ const OL_BASE = 'https://openlibrary.org';
 const GB_BASE = 'https://www.googleapis.com/books/v1';
 const GB_API_KEY = process.env.REACT_APP_GOOGLE_BOOKS_API_KEY;
 
-const olClient = axios.create({ baseURL: OL_BASE });
+const useOpenLibraryProxy = process.env.REACT_APP_OPENLIBRARY_CORS_PROXY !== 'false';
+
 const gbClient = axios.create({
   baseURL: GB_BASE,
   params: GB_API_KEY ? { key: GB_API_KEY } : {},
 });
+
+const OL_CORS_PROXY_FALLBACKS = [
+  'https://api.allorigins.win/raw?url=',
+  'https://thingproxy.freeboard.io/fetch/',
+  'https://api.codetabs.com/v1/proxy?quest=',
+];
+
+const openLibraryGet = async (path, params = {}) => {
+  const url = new URL(`${OL_BASE}${path}`);
+  Object.keys(params).forEach((key) => {
+    const value = params[key];
+    if (value !== undefined && value !== null) {
+      url.searchParams.append(key, value);
+    }
+  });
+
+  const directUrl = url.toString();
+  const proxyUrls = useOpenLibraryProxy
+    ? OL_CORS_PROXY_FALLBACKS.map((proxy) => `${proxy}${encodeURIComponent(directUrl)}`)
+    : [];
+
+  // Try each proxy in order, then direct as last resort.
+  for (const attemptUrl of [...proxyUrls, directUrl]) {
+    try {
+      const result = await axios.get(attemptUrl);
+      console.debug('OpenLibrary fetch success via', attemptUrl);
+      return result;
+    } catch (err) {
+      console.warn('OpenLibrary fetch failed via', attemptUrl, err.message);
+      // If final attempt fails, rethrow.
+      if (attemptUrl === directUrl) throw err;
+    }
+  }
+  throw new Error('OpenLibrary fetch failed via all endpoints');
+};
 
 // Helper: format Open Library book to unified shape
 const formatOLBook = (book) => ({
@@ -58,8 +94,10 @@ const formatGBBook = (item) => {
 export const booksService = {
   // Search books via Open Library (no key needed!)
   searchOpenLibrary: async (query) => {
-    const res = await olClient.get('/search.json', {
-      params: { q: query, limit: 20, fields: 'key,title,author_name,cover_i,first_publish_year,subject,ratings_average,ratings_count,first_sentence' },
+    const res = await openLibraryGet('/search.json', {
+      q: query,
+      limit: 20,
+      fields: 'key,title,author_name,cover_i,first_publish_year,subject,ratings_average,ratings_count,first_sentence',
     });
     return (res.data.docs || []).map(formatOLBook);
   },
@@ -74,14 +112,14 @@ export const booksService = {
 
   // Get Open Library book details
   getBookDetails: async (olKey) => {
-    const res = await olClient.get(`/works/${olKey}.json`);
+    const res = await openLibraryGet(`/works/${olKey}.json`);
     const data = res.data;
 
     // Get author info
     let authorName = 'Unknown Author';
     if (data.authors?.[0]?.author?.key) {
       try {
-        const authorRes = await olClient.get(`${data.authors[0].author.key}.json`);
+        const authorRes = await openLibraryGet(`${data.authors[0].author.key}.json`);
         authorName = authorRes.data.name;
       } catch (_) {}
     }
@@ -105,23 +143,39 @@ export const booksService = {
 
   // Get trending/popular books from Open Library subjects
   getTrendingBySubject: async (subject = 'fiction') => {
-    const res = await olClient.get(`/subjects/${subject}.json`, {
-      params: { limit: 20 },
-    });
-    return (res.data.works || []).map((w) => ({
-      id: w.key?.replace('/works/', ''),
-      title: w.title,
-      author: w.authors?.[0]?.name || 'Unknown',
-      cover: w.cover_id
-        ? `https://covers.openlibrary.org/b/id/${w.cover_id}-L.jpg`
-        : null,
-      coverMedium: w.cover_id
-        ? `https://covers.openlibrary.org/b/id/${w.cover_id}-M.jpg`
-        : null,
-      year: w.first_publish_year,
-      olKey: w.key,
-      source: 'openlibrary',
-    }));
+    try {
+      const res = await openLibraryGet(`/subjects/${subject}.json`, {
+        limit: 20,
+      });
+      return (res.data.works || []).map((w) => ({
+        id: w.key?.replace('/works/', ''),
+        title: w.title,
+        author: w.authors?.[0]?.name || 'Unknown',
+        cover: w.cover_id
+          ? `https://covers.openlibrary.org/b/id/${w.cover_id}-L.jpg`
+          : null,
+        coverMedium: w.cover_id
+          ? `https://covers.openlibrary.org/b/id/${w.cover_id}-M.jpg`
+          : null,
+        year: w.first_publish_year,
+        olKey: w.key,
+        source: 'openlibrary',
+      }));
+    } catch (olError) {
+      console.warn('OpenLibrary subject failed, falling back to Google Books:', olError.message);
+      const fallback = await booksService.getPopularByCategory(subject);
+      return fallback.map((book) => ({
+        id: book.id,
+        title: book.title,
+        author: book.author || 'Unknown',
+        cover: book.cover || book.coverMedium || null,
+        coverMedium: book.coverMedium || book.cover || null,
+        year: book.year || null,
+        subjects: book.subjects || [],
+        rating: book.rating || null,
+        source: 'google',
+      }));
+    }
   },
 
   // Get bestsellers / popular lists from Google Books
