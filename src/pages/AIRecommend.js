@@ -55,7 +55,7 @@ export default function AIRecommend() {
     addToReadlist,
     isInWatchlist,
     isInReadlist,
-    language,
+    contentLanguage,
     currentUser,
   } = useStore();
 
@@ -105,7 +105,7 @@ export default function AIRecommend() {
         userRatings: currentUser?.ratings || {},
         mood: selectedMood || customInput,
         type: contentType,
-        language,
+        language: contentLanguage,
       });
       setRecommendations(results);
       if (results.length === 0) {

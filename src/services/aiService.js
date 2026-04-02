@@ -2,7 +2,7 @@
 // AI Service for recommendations (Gemma 3 via Google Gemini API)
 // Using Gemini API infrastructure to avoid CORS issues on Hugging Face direct calls.
 
-const GEMINI_API_BASE = 'https://generativelanguage.googleapis.com/v1beta/models/gemma-3-4b:generateContent';
+const GEMINI_API_BASE = 'https://generativelanguage.googleapis.com/v1beta/models/gemma-3-4b-it:generateContent';
 
 export const aiService = {
     async getRecommendations({ liked, userSavedMovies = [], userSavedBooks = [], userRatings = {}, mood, genre, type = 'all', language = 'en' }) {
@@ -118,7 +118,7 @@ export const aiService = {
         const targetLang = languageMap[language] || 'English';
 
         return `System: You are an expert curator. Return exactly 8 recommendations in a JSON array.
-Language: Preferred content language is ${targetLang}.
+Language: Preferred content language is ${targetLang}. All titles, reasons, and genres MUST be in ${targetLang}. NEVER use another language.
 
 User Curated Favorites (Movies): ${userSavedMovies.length ? userSavedMovies.join(', ') : 'None'}
 User Curated Favorites (Books): ${userSavedBooks.length ? userSavedBooks.join(', ') : 'None'}
@@ -136,9 +136,9 @@ Required JSON structure (NO OTHER TEXT):
     "title": "Title Name",
     "type": "movie|tv|book",
     "reason": "One punchy sentence in ${targetLang}",
-    "mood": "One word vibe",
+    "mood": "One word vibe in ${targetLang}",
     "year": "YYYY",
-    "genre": "Main Genre",
+    "genre": "Main Genre in ${targetLang}",
     "author_or_director": "Name"
   }
 ]

@@ -9,11 +9,13 @@ const OL_BASE = 'https://openlibrary.org';
 const GB_BASE = 'https://www.googleapis.com/books/v1';
 const GB_API_KEY = process.env.REACT_APP_GOOGLE_BOOKS_API_KEY;
 
-const useOpenLibraryProxy = process.env.REACT_APP_OPENLIBRARY_CORS_PROXY !== 'false';
+const useOpenLibraryProxy = process.env.REACT_APP_OPENLIBRARY_CORS_PROXY === 'true';
+
+const validGbKey = GB_API_KEY && GB_API_KEY !== 'your_google_books_key_here' ? GB_API_KEY : null;
 
 const gbClient = axios.create({
   baseURL: GB_BASE,
-  params: GB_API_KEY ? { key: GB_API_KEY } : {},
+  params: validGbKey ? { key: validGbKey } : {},
 });
 
 const OL_CORS_PROXY_FALLBACKS = [
