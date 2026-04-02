@@ -17,9 +17,9 @@ export default function MediaCard({ item, type = 'movie', showTitle = true }) {
     setRating,
     getRating,
     currentUser,
-    addToUserSavedList,
     removeFromUserSavedList,
     removeFromPlaylist,
+    openSaveModal,
   } = useStore();
 
   const isBook = type === 'book';
@@ -53,43 +53,7 @@ export default function MediaCard({ item, type = 'movie', showTitle = true }) {
   const handleToggleSave = (e) => {
     e.preventDefault();
     e.stopPropagation();
-
-    if (isBook) {
-      if (saved) {
-        removeFromReadlist(item.id);
-        if (currentUser) {
-          removeFromPlaylist(mediaId, currentUser.activePlaylistId);
-          removeFromUserSavedList(mediaId);
-        }
-        toast('Removed from Reading List');
-      } else {
-        addToReadlist({ ...item, mediaType: 'book', id: mediaId });
-        if (currentUser) {
-          addToUserSavedList({ ...item, mediaType: 'book', id: mediaId });
-          toast.success(`Added to ${activePlaylist?.name || 'playlist'} 📚`);
-        } else {
-          toast.success('Added to Reading List 📚');
-        }
-      }
-      return;
-    }
-
-    if (saved) {
-      removeFromWatchlist(item.id, type);
-      if (currentUser) {
-        removeFromPlaylist(mediaId, currentUser.activePlaylistId);
-        removeFromUserSavedList(mediaId);
-      }
-      toast('Removed from Watchlist');
-    } else {
-      addToWatchlist({ ...item, mediaType: type, id: mediaId });
-      if (currentUser) {
-        addToUserSavedList({ ...item, mediaType: type, id: mediaId });
-        toast.success(`Added to ${activePlaylist?.name || 'playlist'} 🎬`);
-      } else {
-        toast.success('Added to Watchlist 🎬');
-      }
-    }
+    openSaveModal({ ...item, mediaType: type, type: type, id: mediaId });
   };
 
   return (

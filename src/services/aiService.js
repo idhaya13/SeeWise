@@ -118,7 +118,7 @@ export const aiService = {
         const targetLang = languageMap[language] || 'English';
 
         return `System: You are an expert curator. Return exactly 8 recommendations in a JSON array.
-Language: Preferred content language is ${targetLang}. All titles, reasons, and genres MUST be in ${targetLang}. NEVER use another language.
+Language & Region Hint: The user is interested in ${targetLang} language content. You should prioritize recommending ${targetLang} movies, TV shows, and books. However, ALL of your textual output (titles, reasons, genres, moods) MUST be written entirely in English. Do NOT translate your JSON output into ${targetLang}.
 
 User Curated Favorites (Movies): ${userSavedMovies.length ? userSavedMovies.join(', ') : 'None'}
 User Curated Favorites (Books): ${userSavedBooks.length ? userSavedBooks.join(', ') : 'None'}
@@ -128,17 +128,17 @@ Vibe needed: ${mood || 'Exciting'}
 Content Type: ${typeLabel}
 Strict Rule: ${typeConstraint}
 
-Guideline: Prioritize items NOT already in user saved titles; choose related works based on genres, styles, story arcs from their saved list.
+Guideline: It is CRITICAL that your recommendations closely match the user's "Vibe needed". You MUST recommend works that share highly similar themes, styles, plot attributes, or genres to the "Liked Titles" and "User Curated Favorites". Do NOT recommend any items already in the user's saved lists.
 
 Required JSON structure (NO OTHER TEXT):
 [
   {
     "title": "Title Name",
     "type": "movie|tv|book",
-    "reason": "One punchy sentence in ${targetLang}",
-    "mood": "One word vibe in ${targetLang}",
+    "reason": "One punchy sentence in English",
+    "mood": "One word vibe in English",
     "year": "YYYY",
-    "genre": "Main Genre in ${targetLang}",
+    "genre": "Main Genre in English",
     "author_or_director": "Name"
   }
 ]

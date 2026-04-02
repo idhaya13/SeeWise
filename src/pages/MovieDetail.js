@@ -16,7 +16,7 @@ export default function MovieDetail() {
   const [searchParams] = useSearchParams();
   const type = searchParams.get('type') || 'movie';
   const [showTrailer, setShowTrailer] = useState(false);
-  const { addToWatchlist, removeFromWatchlist, isInWatchlist, setRating, getRating, currentUser } = useStore();
+  const { addToWatchlist, removeFromWatchlist, isInWatchlist, setRating, getRating, currentUser, openSaveModal } = useStore();
 
   const isImdb = id?.startsWith('tt');
 
@@ -70,14 +70,17 @@ export default function MovieDetail() {
   };
 
   const handleToggleSave = () => {
-    if (isSaved) {
-      removeFromWatchlist(itemKey, type);
-      toast('Removed from Watchlist');
-    } else {
-      addToWatchlist({ ...item, id: itemKey, mediaType: type });
-      toast.success('Added to Watchlist 🎬');
-    }
+    openSaveModal({ ...item, id: itemKey, mediaType: type });
   };
+
+  let isInTheaters = false;
+  if (type === 'movie' && item.release_date) {
+    const rDate = new Date(item.release_date);
+    const now = new Date();
+    const diffDays = (now - rDate) / (1000 * 60 * 60 * 24);
+    // Consider it in theaters if released roughly within the last 60 days, or upcoming in next 14 days
+    isInTheaters = diffDays >= -14 && diffDays <= 60;
+  }
 
   return (
     <div className="detail-page">
@@ -159,7 +162,7 @@ export default function MovieDetail() {
                   .slice(0, 2)
                   .map((c) => (
                     <div key={c.id} className="crew-member">
-                      <span className="crew-role">{c.job}</span>
+                       <span className="crew-role">{c.job}</span>
                       <span className="crew-name">{c.name}</span>
                     </div>
                   ))}
@@ -168,6 +171,17 @@ export default function MovieDetail() {
 
             {/* Actions */}
             <div className="detail-actions">
+              {isInTheaters && (
+                <a 
+                  href={`https://www.google.com/search?q=BookMyShow+tickets+${encodeURIComponent(title)}`}
+                  target="_blank" 
+                  rel="noreferrer"
+                  className="btn btn-primary btn-lg"
+                  style={{ backgroundColor: '#F84464', color: '#fff', borderColor: '#F84464' }} 
+                >
+                  🎟️ Book Tickets
+                </a>
+              )}
               {trailerKey && (
                 <button className="btn btn-primary btn-lg" onClick={() => setShowTrailer(true)}>
                   <FiPlay /> Watch Trailer

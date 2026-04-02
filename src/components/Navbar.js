@@ -1,7 +1,7 @@
 // src/components/Navbar.js
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { FiFilm, FiTv, FiBook, FiCompass, FiBookmark, FiSearch, FiX, FiZap, FiChevronDown, FiGlobe, FiPlayCircle } from 'react-icons/fi';
+import { FiFilm, FiTv, FiBook, FiCompass, FiBookmark, FiSearch, FiX, FiZap, FiChevronDown, FiGlobe, FiPlayCircle, FiClock } from 'react-icons/fi';
 import { useNavigate } from 'react-router-dom';
 import useStore from '../store/useStore';
 import './Navbar.css';
@@ -14,6 +14,7 @@ const NAV_LINKS = [
   { to: '/tv', label: 'TV Shows', icon: <FiTv /> },
   { to: '/now-playing', label: 'In Theaters', icon: <FiPlayCircle /> },
   { to: '/books', label: 'Books', icon: <FiBook /> },
+  { to: '/quick-watch', label: 'QuickWatch', icon: <FiClock /> },
   { to: '/discover', label: 'Discover', icon: <FiCompass /> },
   { to: '/my-list', label: 'My List', icon: <FiBookmark /> },
 ];

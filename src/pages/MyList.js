@@ -7,22 +7,13 @@ import toast from 'react-hot-toast';
 import MediaCard from '../components/MediaCard';
 import './MyList.css';
 
-const TABS = [
-  { key: 'watchlist', label: '🎬 Watchlist' },
-  { key: 'readlist', label: '📚 Reading List' },
-];
-
 export default function MyList() {
-  const [activeTab, setActiveTab] = useState('watchlist');
   const [newPlaylistName, setNewPlaylistName] = useState('');
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
   const {
-    watchlist,
-    readlist,
-    removeFromWatchlist,
-    removeFromReadlist,
     currentUser,
+    guestPlaylists,
     setActivePlaylist,
     createPlaylist,
     deletePlaylist,
@@ -30,22 +21,25 @@ export default function MyList() {
     removeFromUserSavedList,
   } = useStore();
 
-  const currentPlaylists = Array.isArray(currentUser?.playlists) ? currentUser.playlists : [];
-  const activePlaylist = currentUser
-    ? currentPlaylists.find((pl) => pl.id === currentUser.activePlaylistId)
-    : null;
+  const currentPlaylists = currentUser ? (Array.isArray(currentUser.playlists) ? currentUser.playlists : []) : guestPlaylists;
+  
+  // Create a proxy for Guest active Playlist ID if not logged in
+  const [guestActivePlaylistId, setGuestActivePlaylistId] = useState(guestPlaylists[0]?.id);
+  const activeId = currentUser ? currentUser.activePlaylistId : guestActivePlaylistId;
+  
+  const activePlaylist = currentPlaylists.find((pl) => pl.id === activeId) || currentPlaylists[0];
 
-  const items = currentUser
-    ? activePlaylist?.items || []
-    : activeTab === 'watchlist'
-      ? watchlist
-      : readlist;
+  const items = activePlaylist?.items || [];
+
+  const updateActivePlaylist = (id) => {
+    if (currentUser) {
+      setActivePlaylist(id);
+    } else {
+      setGuestActivePlaylistId(id);
+    }
+  };
 
   const handleCreatePlaylist = () => {
-    if (!currentUser) {
-      toast.error('Please login to create playlists.');
-      return;
-    }
     if (!newPlaylistName.trim()) {
       toast.error('Playlist name cannot be empty.');
       return;
@@ -58,22 +52,13 @@ export default function MyList() {
   const isEmpty = items.length === 0;
 
   const handleRemove = (item) => {
+    if (activePlaylist?.id) {
+      removeFromPlaylist((item.id || item.imdbID || item.olKey), activePlaylist.id);
+    }
     if (currentUser) {
-      if (activePlaylist?.id) {
-        removeFromPlaylist((item.id || item.imdbID), activePlaylist.id);
-      }
-      removeFromUserSavedList((item.id || item.imdbID));
-      toast('Removed from playlist');
-      return;
+      removeFromUserSavedList((item.id || item.imdbID || item.olKey));
     }
-
-    if (activeTab === 'watchlist') {
-      removeFromWatchlist(item.id, item.mediaType);
-      toast('Removed from Watchlist');
-    } else {
-      removeFromReadlist(item.id);
-      toast('Removed from Reading List');
-    }
+    toast('Removed from playlist');
   };
 
   return (
@@ -103,8 +88,7 @@ export default function MyList() {
         </div>
       </div>
 
-      {currentUser ? (
-        <>
+      {/* Playlists */}
           <div className="playlist-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
             <div>
               <h2 style={{ margin: 0 }}>Your Playlists</h2>
@@ -139,7 +123,7 @@ export default function MyList() {
                     </button>
                   )}
                 </div>
-                <div onClick={() => setActivePlaylist(pl.id)}>
+                <div onClick={() => updateActivePlaylist(pl.id)}>
                   <strong>{pl.name}</strong>
                   <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginTop: '0.4rem' }}>
                     {pl.items.length} item{pl.items.length !== 1 ? 's' : ''}
@@ -181,37 +165,13 @@ export default function MyList() {
               </div>
             </div>
           )}
-        </>
-      ) : (
-        <div className="tabs" style={{ marginBottom: '1.75rem' }}>
-          {TABS.map((t) => (
-            <button
-              key={t.key}
-              className={`tab ${activeTab === t.key ? 'active' : ''}`}
-              onClick={() => setActiveTab(t.key)}
-            >
-              {t.label}
-              <span className="tab-badge">
-                {t.key === 'watchlist' ? watchlist.length : readlist.length}
-              </span>
-            </button>
-          ))}
-        </div>
-      )}
 
       {/* Items */}
       {isEmpty ? (
         <div className="empty-state">
-          <div className="empty-state-icon">
-            {activeTab === 'watchlist' ? '🎬' : '📚'}
-          </div>
-          <h3>Your {activeTab === 'watchlist' ? 'watchlist' : 'reading list'} is empty</h3>
-          <p>
-            Browse movies, TV shows, and books — hit the bookmark icon to save them here.
-          </p>
-          <div style={{ display: 'flex', gap: '0.75rem', marginTop: '0.5rem' }}>
-            <Link to={activeTab === 'watchlist' ? '/movies' : '/books'} className="btn btn-primary">
-              {activeTab === 'watchlist' ? <><FiFilm /> Browse Movies</> : <><FiBook /> Browse Books</>}
+          <div style={{ display: 'flex', gap: '0.75rem', marginTop: '0.5rem', justifyContent: 'center' }}>
+            <Link to="/movies" className="btn btn-primary">
+              <FiFilm /> Browse Media
             </Link>
             <Link to="/ai-recommend" className="btn btn-secondary">
               <FiZap /> AI Picks
@@ -226,7 +186,7 @@ export default function MyList() {
               <div key={item.id} className="mylist-item-wrapper">
                 <MediaCard
                   item={item}
-                  type={item.mediaType || (activeTab === 'watchlist' ? 'movie' : 'book')}
+                  type={item.mediaType || 'movie'}
                 />
                 <button
                   className="remove-btn"

@@ -44,19 +44,6 @@ export default function Home() {
     if (hero) setTimeout(() => setHeroLoaded(true), 100);
   }, [heroIndex, hero]);
 
-  const heroSaved = hero ? isInWatchlist(hero.id, 'movie') : false;
-
-  const handleHeroSave = () => {
-    if (!hero) return;
-    if (heroSaved) {
-      removeFromWatchlist(hero.id, 'movie');
-      toast('Removed from Watchlist');
-    } else {
-      addToWatchlist({ ...hero, mediaType: 'movie' });
-      toast.success('Added to Watchlist 🎬');
-    }
-  };
-
   return (
     <div className="home-page">
       {/* ======================== HERO ======================== */}
@@ -104,10 +91,6 @@ export default function Home() {
                   <Link to={`/movie/${hero.id}?type=movie`} className="btn btn-primary btn-lg">
                     <FiInfo size={18} /> View Details
                   </Link>
-                  <button className={`btn btn-secondary btn-lg ${heroSaved ? 'saved' : ''}`} onClick={handleHeroSave}>
-                    {heroSaved ? <BsBookmarkFill /> : <BsBookmark />}
-                    {heroSaved ? 'Saved' : 'Save'}
-                  </button>
                   <Link to="/ai-recommend" className="btn btn-ghost btn-lg ai-rec-btn">
                     <FiZap />
                     AI Picks

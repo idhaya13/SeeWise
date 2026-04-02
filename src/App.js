@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from 'react-query';
 import { Toaster } from 'react-hot-toast';
 
 import Navbar from './components/Navbar';
+import SaveModal from './components/SaveModal';
 import Home from './pages/Home';
 import Movies from './pages/Movies';
 import Books from './pages/Books';
@@ -14,6 +15,7 @@ import MovieDetail from './pages/MovieDetail';
 import BookDetail from './pages/BookDetail';
 import AIRecommend from './pages/AIRecommend';
 import NowPlaying from './pages/NowPlaying';
+import QuickWatch from './pages/QuickWatch';
 import Login from './pages/Login';
 
 import './styles/global.css';
@@ -34,6 +36,7 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <Router>
         <div className="app">
+          <SaveModal />
           <Navbar />
           <main className="main-content">
             <Routes>
@@ -42,6 +45,7 @@ function App() {
               <Route path="/tv" element={<Movies />} />
               <Route path="/books" element={<Books />} />
               <Route path="/now-playing" element={<NowPlaying />} />
+              <Route path="/quick-watch" element={<QuickWatch />} />
               <Route path="/login" element={<Login />} />
               <Route path="/discover" element={<Discover />} />
               <Route path="/my-list" element={<MyList />} />

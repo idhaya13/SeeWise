@@ -69,6 +69,7 @@ const formatOLBook = (book) => ({
   rating: book.ratings_average ? book.ratings_average.toFixed(1) : null,
   ratingCount: book.ratings_count,
   description: book.first_sentence?.value || null,
+  pageCount: book.number_of_pages_median || null,
   olKey: book.key,
   source: 'openlibrary',
 });
@@ -99,7 +100,7 @@ export const booksService = {
     const res = await openLibraryGet('/search.json', {
       q: query,
       limit: 20,
-      fields: 'key,title,author_name,cover_i,first_publish_year,subject,ratings_average,ratings_count,first_sentence',
+      fields: 'key,title,author_name,cover_i,first_publish_year,subject,ratings_average,ratings_count,first_sentence,number_of_pages_median',
     });
     return (res.data.docs || []).map(formatOLBook);
   },
@@ -192,7 +193,7 @@ export const booksService = {
         subject: subject,
         limit: 20,
         page: page,
-        fields: 'key,title,author_name,cover_i,first_publish_year,subject,ratings_average,ratings_count,first_sentence',
+        fields: 'key,title,author_name,cover_i,first_publish_year,subject,ratings_average,ratings_count,first_sentence,number_of_pages_median',
       });
       const results = (res.data.docs || []).map(formatOLBook);
       const total_pages = res.data.numFound ? Math.ceil(res.data.numFound / 20) : 10;
@@ -252,7 +253,7 @@ export const booksService = {
     try {
       const limit = 20;
       const [olPromise, gbPromise] = await Promise.allSettled([
-        openLibraryGet('/search.json', { q: query, limit, page, fields: 'key,title,author_name,cover_i,first_publish_year,subject,ratings_average,ratings_count,first_sentence' }),
+        openLibraryGet('/search.json', { q: query, limit, page, fields: 'key,title,author_name,cover_i,first_publish_year,subject,ratings_average,ratings_count,first_sentence,number_of_pages_median' }),
         gbClient.get('/volumes', { params: { q: query, maxResults: limit, startIndex: (page - 1) * limit, printType: 'books' } })
       ]);
 

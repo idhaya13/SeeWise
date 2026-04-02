@@ -42,6 +42,7 @@ export default function AIRecommend() {
 
   const [selectedMood, setSelectedMood] = useState('');
   const [contentType, setContentType] = useState('all');
+  const [aiLanguage, setAiLanguage] = useState('en');
   const [customInput, setCustomInput] = useState('');
   const [likedInputs, setLikedInputs] = useState([]);
   const [currentInput, setCurrentInput] = useState('');
@@ -67,7 +68,8 @@ export default function AIRecommend() {
     }
     // Seed liked inputs from store
     if (likedTitles.length) setLikedInputs(likedTitles.slice(0, 5));
-  }, [moodParam, likedTitles]);
+    if (contentLanguage) setAiLanguage(contentLanguage.split('-')[0]);
+  }, [moodParam, likedTitles, contentLanguage]);
 
   const addInput = () => {
     if (currentInput.trim() && !likedInputs.includes(currentInput.trim())) {
@@ -85,10 +87,19 @@ export default function AIRecommend() {
   };
 
   const handleGetRecommendations = async () => {
-    if (!likedInputs.length && !selectedMood && !customInput.trim()) {
+    // Auto-commit any orphaned text the user forgot to hit "Add" on
+    let finalLiked = [...likedInputs];
+    if (currentInput.trim() && !finalLiked.includes(currentInput.trim())) {
+      finalLiked.push(currentInput.trim());
+      setLikedInputs(finalLiked);
+      setCurrentInput('');
+    }
+
+    if (!finalLiked.length && !selectedMood && !customInput.trim()) {
       toast.error('Please add at least one title or select a mood!');
       return;
     }
+    
     setLoading(true);
     setHasSearched(true);
     setRecommendations([]);
@@ -96,16 +107,16 @@ export default function AIRecommend() {
     try {
       const userSavedTitles = currentUser?.savedList?.map((item) => item.title).filter(Boolean) || [];
       const userSavedBooks = currentUser?.savedList?.filter((item) => item.mediaType === 'book').map((item) => item.title) || [];
-      const likedPlusSaved = Array.from(new Set([...likedInputs, ...userSavedTitles]));
+      const likedPlusSaved = Array.from(new Set([...finalLiked, ...userSavedTitles]));
 
       const results = await aiService.getRecommendations({
         liked: likedPlusSaved,
         userSavedMovies: userSavedTitles,
         userSavedBooks,
         userRatings: currentUser?.ratings || {},
-        mood: selectedMood || customInput,
+        mood: [selectedMood, customInput.trim()].filter(Boolean).join(' AND '),
         type: contentType,
-        language: contentLanguage,
+        language: aiLanguage,
       });
       setRecommendations(results);
       if (results.length === 0) {
@@ -254,6 +265,29 @@ export default function AIRecommend() {
                 onChange={(e) => setCustomInput(e.target.value)}
                 rows={3}
               />
+            </div>
+
+            {/* Step 5: Region / Language */}
+            <div className="ai-section">
+              <h3 className="ai-section-title">
+                <span className="step-num">5</span> Preferred Region <span className="optional">(optional)</span>
+              </h3>
+              <select 
+                className="search-input" 
+                value={aiLanguage} 
+                onChange={(e) => setAiLanguage(e.target.value)}
+                style={{ cursor: 'pointer', padding: '0.75rem 1rem', width: '100%' }}
+              >
+                <option value="en">Global (English)</option>
+                <option value="hi">India (Hindi)</option>
+                <option value="ta">India (Tamil)</option>
+                <option value="te">India (Telugu)</option>
+                <option value="ml">India (Malayalam)</option>
+                <option value="ko">Korean</option>
+                <option value="ja">Japanese</option>
+                <option value="es">Spanish</option>
+                <option value="fr">French</option>
+              </select>
             </div>
 
             {/* CTA */}

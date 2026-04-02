@@ -5,9 +5,17 @@ import { persist } from 'zustand/middleware';
 const useStore = create(
   persist(
     (set, get) => ({
-      // --- Watchlist / Reading list ---
+      // --- Watchlist / Reading list (legacy) ---
       watchlist: [],
       readlist: [],
+
+      // --- Offline Custom Playlists ---
+      guestPlaylists: [{ id: 'playlist-guest-default', name: 'My Watchlist', items: [] }],
+      
+      // --- Save Modal UI State ---
+      saveModalState: { isOpen: false, item: null },
+      openSaveModal: (item) => set({ saveModalState: { isOpen: true, item } }),
+      closeSaveModal: () => set({ saveModalState: { isOpen: false, item: null } }),
 
       addToWatchlist: (item) => {
         const current = get().watchlist;
@@ -124,16 +132,21 @@ const useStore = create(
       },
       createPlaylist: (name) => {
         const user = get().currentUser;
-        if (!user || !name.trim()) return;
-        const playlists = Array.isArray(user.playlists) ? user.playlists : [];
+        if (!name.trim()) return;
         const playlistId = `playlist-${Date.now()}`;
         const newPlaylist = { id: playlistId, name: name.trim(), items: [] };
-        const updatedUser = {
-          ...user,
-          playlists: [...playlists, newPlaylist],
-          activePlaylistId: playlistId,
-        };
-        set({ currentUser: updatedUser, users: get().users.map((u) => (u.id === user.id ? updatedUser : u)) });
+        
+        if (user) {
+          const playlists = Array.isArray(user.playlists) ? user.playlists : [];
+          const updatedUser = {
+            ...user,
+            playlists: [...playlists, newPlaylist],
+            activePlaylistId: playlistId,
+          };
+          set({ currentUser: updatedUser, users: get().users.map((u) => (u.id === user.id ? updatedUser : u)) });
+        } else {
+          set({ guestPlaylists: [...get().guestPlaylists, newPlaylist] });
+        }
       },
       deletePlaylist: (playlistId) => {
         const user = get().currentUser;
@@ -146,24 +159,43 @@ const useStore = create(
       },
       addToPlaylist: (itemId, item, playlistId) => {
         const user = get().currentUser;
-        if (!user || !playlistId) return;
-        const playlists = user.playlists.map((pl) => {
-          if (pl.id !== playlistId) return pl;
-          if (pl.items.some((i) => (i.id || i.imdbID) === itemId)) return pl;
-          return { ...pl, items: [...pl.items, item] };
-        });
-        const updatedUser = { ...user, playlists };
-        set({ currentUser: updatedUser, users: get().users.map((u) => (u.id === user.id ? updatedUser : u)) });
+        if (!playlistId) return;
+        
+        if (user) {
+          const playlists = user.playlists.map((pl) => {
+            if (pl.id !== playlistId) return pl;
+            if (pl.items.some((i) => (i.id || i.imdbID || i.olKey) === itemId)) return pl;
+            return { ...pl, items: [...pl.items, item] };
+          });
+          const updatedUser = { ...user, playlists };
+          set({ currentUser: updatedUser, users: get().users.map((u) => (u.id === user.id ? updatedUser : u)) });
+        } else {
+          const playlists = get().guestPlaylists.map((pl) => {
+            if (pl.id !== playlistId) return pl;
+            if (pl.items.some((i) => (i.id || i.imdbID || i.olKey) === itemId)) return pl;
+            return { ...pl, items: [...pl.items, item] };
+          });
+          set({ guestPlaylists: playlists });
+        }
       },
       removeFromPlaylist: (itemId, playlistId) => {
         const user = get().currentUser;
-        if (!user || !playlistId) return;
-        const playlists = user.playlists.map((pl) => {
-          if (pl.id !== playlistId) return pl;
-          return { ...pl, items: pl.items.filter((i) => (i.id || i.imdbID) !== itemId) };
-        });
-        const updatedUser = { ...user, playlists };
-        set({ currentUser: updatedUser, users: get().users.map((u) => (u.id === user.id ? updatedUser : u)) });
+        if (!playlistId) return;
+        
+        if (user) {
+          const playlists = user.playlists.map((pl) => {
+            if (pl.id !== playlistId) return pl;
+            return { ...pl, items: pl.items.filter((i) => (i.id || i.imdbID || i.olKey) !== itemId) };
+          });
+          const updatedUser = { ...user, playlists };
+          set({ currentUser: updatedUser, users: get().users.map((u) => (u.id === user.id ? updatedUser : u)) });
+        } else {
+          const playlists = get().guestPlaylists.map((pl) => {
+            if (pl.id !== playlistId) return pl;
+            return { ...pl, items: pl.items.filter((i) => (i.id || i.imdbID || i.olKey) !== itemId) };
+          });
+          set({ guestPlaylists: playlists });
+        }
       },
       addToUserSavedList: (item) => {
         const user = get().currentUser;
@@ -229,6 +261,7 @@ const useStore = create(
       partialize: (state) => ({
         watchlist: state.watchlist,
         readlist: state.readlist,
+        guestPlaylists: state.guestPlaylists,
         likedTitles: state.likedTitles,
         theme: state.theme,
         language: state.language,
