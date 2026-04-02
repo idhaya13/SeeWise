@@ -1,5 +1,5 @@
 // src/pages/Books.js
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useQuery } from 'react-query';
 import { useSearchParams } from 'react-router-dom';
 import booksService from '../services/books';
@@ -26,26 +26,29 @@ export default function Books() {
   const [searchQuery, setSearchQuery] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
 
+  const [page, setPage] = useState(1);
+
+  // Reset page when subject or search changes
+  useEffect(() => {
+    setPage(1);
+  }, [activeSubject, searchTerm]);
+
   const {
-    data: subjectBooks = [],
-    isLoading,
-    isError: isSubjectError,
-    error: subjectError,
+    data: subjectData = { results: [], total_pages: 1 },
+    isLoading: isSubjectLoading,
   } = useQuery(
-    ['books-subject', activeSubject],
-    () => booksService.getTrendingBySubject(activeSubject),
-    { staleTime: 10 * 60 * 1000 }
+    ['books-subject', activeSubject, page],
+    () => booksService.getTrendingBySubjectPage(activeSubject, page),
+    { keepPreviousData: true, staleTime: 10 * 60 * 1000 }
   );
 
   const {
-    data: searchResults = [],
+    data: searchData = { results: [], total_pages: 1 },
     isLoading: searching,
-    isError: isSearchError,
-    error: searchError,
   } = useQuery(
-    ['books-search', searchTerm],
-    () => booksService.searchBooks(searchTerm),
-    { enabled: !!searchTerm, staleTime: 5 * 60 * 1000 }
+    ['books-search', searchTerm, page],
+    () => booksService.searchBooksPage(searchTerm, page),
+    { enabled: !!searchTerm, keepPreviousData: true, staleTime: 5 * 60 * 1000 }
   );
 
   const handleSearch = (e) => {
@@ -60,8 +63,19 @@ export default function Books() {
     setSearchQuery('');
   };
 
-  const displayBooks = searchTerm ? searchResults : subjectBooks;
-  const isLoading2 = searchTerm ? searching : isLoading;
+  const displayBooks = searchTerm ? searchData.results : subjectData.results;
+  const totalPages = searchTerm ? searchData.total_pages : subjectData.total_pages;
+  const isLoading2 = searchTerm ? searching : isSubjectLoading;
+
+  const getPageList = () => {
+    const maxButtons = 5;
+    let start = Math.max(1, page - Math.floor(maxButtons / 2));
+    let end = Math.min(totalPages, start + maxButtons - 1);
+    if (end - start + 1 < maxButtons) {
+      start = Math.max(1, end - maxButtons + 1);
+    }
+    return Array.from({ length: end - start + 1 }, (_, idx) => start + idx);
+  };
 
   return (
     <div className="movies-page books-page container">
@@ -120,17 +134,7 @@ export default function Books() {
       )}
 
       {/* Grid */}
-      {(isSubjectError || isSearchError) ? (
-        <div className="empty-state">
-          <div className="empty-state-icon">⚠️</div>
-          <h3>Could not load books right now</h3>
-          <p>
-            {isSubjectError && `Subject load failed: ${(subjectError?.message || 'Unknown error')}`}
-            {isSearchError && `Search failed: ${(searchError?.message || 'Unknown error')}`}
-          </p>
-          <p>Try again, check your network, or set <code>REACT_APP_OPENLIBRARY_CORS_PROXY=false</code> in .env if you are on a server-side proxy.</p>
-        </div>
-      ) : isLoading2 ? (
+      {isLoading2 ? (
         <div className="grid grid-4">
           {Array(12).fill(0).map((_, i) => (
             <div key={i} className="skeleton skeleton-card" />
@@ -143,11 +147,50 @@ export default function Books() {
           <p>Try a different search term or browse another genre.</p>
         </div>
       ) : (
-        <div className="grid grid-4 fade-in">
-          {displayBooks.map((book) => (
-            <MediaCard key={book.id} item={book} type="book" />
-          ))}
-        </div>
+        <>
+          <div className="grid grid-4 fade-in">
+            {displayBooks.map((book) => (
+              <MediaCard key={book.id || book.olKey} item={book} type="book" />
+            ))}
+          </div>
+
+          {totalPages > 1 && (
+            <div className="pagination-controls" style={{ marginTop: '2rem', textAlign: 'center' }}>
+              <div className="page-nav" style={{ display: 'inline-flex', gap: '0.25rem', flexWrap: 'wrap', justifyContent: 'center' }}>
+                <button 
+                  className="btn btn-secondary" 
+                  disabled={page <= 1 || isLoading2} 
+                  onClick={() => setPage(page - 1)}
+                >
+                  Prev
+                </button>
+                {getPageList().map((pageNumber) => (
+                  <button
+                    key={pageNumber}
+                    className={`btn ${page === pageNumber ? 'btn-primary' : 'btn-secondary'}`}
+                    disabled={page === pageNumber || isLoading2}
+                    onClick={() => setPage(pageNumber)}
+                  >
+                    {pageNumber}
+                  </button>
+                ))}
+                {totalPages > getPageList().length && page < totalPages - 2 && (
+                  <span className="dot-spacer" style={{ alignSelf: 'center' }}>...</span>
+                )}
+                <button 
+                  className="btn btn-secondary" 
+                  disabled={page >= totalPages || isLoading2} 
+                  onClick={() => setPage(page + 1)}
+                >
+                  Next
+                </button>
+              </div>
+              <div style={{ marginTop: '0.5rem', color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
+                Page {page} / {totalPages}
+              </div>
+            </div>
+          )}
+        </>
       )}
 
       {/* API Credit */}

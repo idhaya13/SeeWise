@@ -165,18 +165,49 @@ export const booksService = {
       }));
     } catch (olError) {
       console.warn('OpenLibrary subject failed, falling back to Google Books:', olError.message);
-      const fallback = await booksService.getPopularByCategory(subject);
-      return fallback.map((book) => ({
-        id: book.id,
-        title: book.title,
-        author: book.author || 'Unknown',
-        cover: book.cover || book.coverMedium || null,
-        coverMedium: book.coverMedium || book.cover || null,
-        year: book.year || null,
-        subjects: book.subjects || [],
-        rating: book.rating || null,
-        source: 'google',
-      }));
+      try {
+        const fallback = await booksService.getPopularByCategory(subject);
+        return fallback.map((book) => ({
+          id: book.id,
+          title: book.title,
+          author: book.author || 'Unknown',
+          cover: book.cover || book.coverMedium || null,
+          coverMedium: book.coverMedium || book.cover || null,
+          year: book.year || null,
+          subjects: book.subjects || [],
+          rating: book.rating || null,
+          source: 'google',
+        }));
+      } catch (gbError) {
+        console.warn('Google Books fallback failed (429 rate limit). Swallowing error.');
+        return [];
+      }
+    }
+  },
+
+  getTrendingBySubjectPage: async (subject = 'fiction', page = 1) => {
+    try {
+      // The OpenLibrary /subjects endpoint ignores pagination limits. We leverage /search.json for accurate offset math.
+      const res = await openLibraryGet('/search.json', {
+        subject: subject,
+        limit: 20,
+        page: page,
+        fields: 'key,title,author_name,cover_i,first_publish_year,subject,ratings_average,ratings_count,first_sentence',
+      });
+      const results = (res.data.docs || []).map(formatOLBook);
+      const total_pages = res.data.numFound ? Math.ceil(res.data.numFound / 20) : 10;
+      return { results, page, total_pages };
+    } catch (olError) {
+      try {
+        const res = await gbClient.get('/volumes', {
+          params: { q: `subject:${subject}`, orderBy: 'relevance', maxResults: 20, startIndex: (page - 1) * 20, printType: 'books' },
+        });
+        const results = (res.data.items || []).map(formatGBBook);
+        const total_pages = res.data.totalItems ? Math.ceil(res.data.totalItems / 20) : 10;
+        return { results, page, total_pages };
+      } catch (gbError) {
+        return { results: [], page, total_pages: 1 };
+      }
     }
   },
 
@@ -214,6 +245,48 @@ export const booksService = {
     } catch (e) {
       console.error('Book search error:', e);
       return [];
+    }
+  },
+
+  searchBooksPage: async (query, page = 1) => {
+    try {
+      const limit = 20;
+      const [olPromise, gbPromise] = await Promise.allSettled([
+        openLibraryGet('/search.json', { q: query, limit, page, fields: 'key,title,author_name,cover_i,first_publish_year,subject,ratings_average,ratings_count,first_sentence' }),
+        gbClient.get('/volumes', { params: { q: query, maxResults: limit, startIndex: (page - 1) * limit, printType: 'books' } })
+      ]);
+
+      let olCount = 0;
+      let olItems = [];
+      if (olPromise.status === 'fulfilled') {
+        olCount = olPromise.value.data.numFound || 0;
+        olItems = (olPromise.value.data.docs || []).map(formatOLBook);
+      }
+
+      let gbCount = 0;
+      let gbItems = [];
+      if (gbPromise.status === 'fulfilled') {
+        gbCount = gbPromise.value.data.totalItems || 0;
+        gbItems = (gbPromise.value.data.items || []).map(formatGBBook);
+      }
+
+      const total_pages = Math.max(
+        Math.ceil(olCount / limit),
+        Math.ceil(gbCount / limit)
+      ) || 1;
+
+      const seen = new Set();
+      const merged = [...olItems, ...gbItems].filter((b) => {
+        const key = b.title?.toLowerCase().trim();
+        if (!key || seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      });
+
+      return { results: merged, page, total_pages };
+    } catch (e) {
+      console.error('Book search page error:', e);
+      return { results: [], page, total_pages: 1 };
     }
   },
 };

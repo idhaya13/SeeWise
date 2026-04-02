@@ -18,9 +18,10 @@ export default function Home() {
   const [heroLoaded, setHeroLoaded] = useState(false);
   const { addToWatchlist, removeFromWatchlist, isInWatchlist, contentLanguage } = useStore();
 
-  const { data: trending = [] } = useQuery(['trending-movies', contentLanguage], () => tmdbService.getTrending(contentLanguage), { staleTime: 5 * 60 * 1000 });
-  const { data: trendingTV = [] } = useQuery(['trending-tv', contentLanguage], () => tmdbService.getTrendingTV(contentLanguage), { staleTime: 5 * 60 * 1000 });
-  const { data: topRated = [] } = useQuery(['top-rated', contentLanguage], () => tmdbService.getTopRated(contentLanguage), { staleTime: 10 * 60 * 1000 });
+  // Keep core home feed in English by default; regional fetch is done in specific tabs
+  const { data: trending = [] } = useQuery(['trending-movies', 'en'], () => tmdbService.getTrending('en'), { staleTime: 5 * 60 * 1000 });
+  const { data: trendingTV = [] } = useQuery(['trending-tv', 'en'], () => tmdbService.getTrendingTV('en'), { staleTime: 5 * 60 * 1000 });
+  const { data: topRated = [] } = useQuery(['top-rated', 'en'], () => tmdbService.getTopRated('en'), { staleTime: 10 * 60 * 1000 });
   const { data: featuredBooks = [] } = useQuery('featured-books', () => booksService.getTrendingBySubject('fiction'), { staleTime: 10 * 60 * 1000 });
   const { data: scifiBooks = [] } = useQuery('scifi-books', () => booksService.getTrendingBySubject('science-fiction'), { staleTime: 10 * 60 * 1000 });
 
@@ -162,7 +163,7 @@ export default function Home() {
           <section className="section">
             <div className="section-header">
               <h2 className="section-title">📺 Trending TV Shows</h2>
-              <Link to="/movies?tab=tv" className="see-all">See All <FiChevronRight /></Link>
+              <Link to="/tv" className="see-all">See All <FiChevronRight /></Link>
             </div>
             <div className="scroll-row">
               {trendingTV.slice(0, 12).map((show) => (
