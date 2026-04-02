@@ -18,10 +18,9 @@ export default function Home() {
   const [heroLoaded, setHeroLoaded] = useState(false);
   const { addToWatchlist, removeFromWatchlist, isInWatchlist, contentLanguage } = useStore();
 
-  // Keep core home feed in English by default; regional fetch is done in Movies via OMDB
-  const { data: trending = [] } = useQuery(['trending-movies', 'en'], () => tmdbService.getTrending('en'), { staleTime: 5 * 60 * 1000 });
-  const { data: trendingTV = [] } = useQuery(['trending-tv', 'en'], () => tmdbService.getTrendingTV('en'), { staleTime: 5 * 60 * 1000 });
-  const { data: topRated = [] } = useQuery(['top-rated', 'en'], () => tmdbService.getTopRated('en'), { staleTime: 10 * 60 * 1000 });
+  const { data: trending = [] } = useQuery(['trending-movies', contentLanguage], () => tmdbService.getTrending(contentLanguage), { staleTime: 5 * 60 * 1000 });
+  const { data: trendingTV = [] } = useQuery(['trending-tv', contentLanguage], () => tmdbService.getTrendingTV(contentLanguage), { staleTime: 5 * 60 * 1000 });
+  const { data: topRated = [] } = useQuery(['top-rated', contentLanguage], () => tmdbService.getTopRated(contentLanguage), { staleTime: 10 * 60 * 1000 });
   const { data: featuredBooks = [] } = useQuery('featured-books', () => booksService.getTrendingBySubject('fiction'), { staleTime: 10 * 60 * 1000 });
   const { data: scifiBooks = [] } = useQuery('scifi-books', () => booksService.getTrendingBySubject('science-fiction'), { staleTime: 10 * 60 * 1000 });
 

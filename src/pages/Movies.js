@@ -1,46 +1,42 @@
 import React, { useState, useEffect } from 'react';
 import { useQuery } from 'react-query';
 import { useSearchParams, useLocation } from 'react-router-dom';
-import { FiFilter } from 'react-icons/fi';
+import { FiFilter, FiGlobe } from 'react-icons/fi';
 import tmdbService from '../services/tmdb';
 import useStore from '../store/useStore';
 import MediaCard from '../components/MediaCard';
 import './Movies.css';
 
-const MOVIE_TABS = [
-  { key: 'trending', label: '🔥 Trending' },
-  { key: 'top', label: '⭐ Top Rated' },
-  { key: 'now', label: '🎬 Now Playing' },
-];
 
-const TV_TABS = [
-  { key: 'trending', label: '🔥 Trending' },
-  { key: 'top', label: '⭐ Top Rated' },
-  { key: 'on-air', label: '📺 On The Air' },
+
+const LANGUAGES = [
+  { code: 'en', name: 'English', flag: '🇺🇸' },
+  { code: 'hi', name: 'Hindi', flag: '🇮🇳' },
+  { code: 'te', name: 'Telugu', flag: '🇮🇳' },
+  { code: 'ta', name: 'Tamil', flag: '🇮🇳' },
+  { code: 'ml', name: 'Malayalam', flag: '🇮🇳' },
+  { code: 'kn', name: 'Kannada', flag: '🇮🇳' },
+  { code: 'mr', name: 'Marathi', flag: '🇮🇳' },
+  { code: 'es', name: 'Spanish', flag: '🇪🇸' },
+  { code: 'fr', name: 'French', flag: '🇫🇷' },
+  { code: 'de', name: 'German', flag: '🇩🇪' },
+  { code: 'ja', name: 'Japanese', flag: '🇯🇵' },
+  { code: 'ko', name: 'Korean', flag: '🇰🇷' },
 ];
 
 export default function Movies() {
-  const { contentLanguage, regionalOnly, setRegionalOnly } = useStore();
-  const activeRegional = regionalOnly || contentLanguage !== 'en';
+  const { contentLanguage, setContentLanguage } = useStore();
+  const activeRegional = contentLanguage !== 'en';
   const [searchParams, setSearchParams] = useSearchParams();
 
   const location = useLocation();
   const mediaType = location.pathname.includes('/tv') ? 'tv' : 'movie';
-  const tabParam = searchParams.get('tab');
-  const [activeTab, setActiveTab] = useState(tabParam || 'trending');
   const [selectedGenre, setSelectedGenre] = useState(null);
 
   // Sync state with URL if it changes (e.g. clicking different nav links)
   useEffect(() => {
-    setActiveTab(tabParam || 'trending');
     setSelectedGenre(null);
-  }, [location.pathname, tabParam]);
-
-  const handleTab = (key) => {
-    setActiveTab(key);
-    setSelectedGenre(null);
-    setSearchParams({ tab: key });
-  };
+  }, [location.pathname]);
 
   // Dynamic Genre Fetching
   const { data: genres = [] } = useQuery(
@@ -65,14 +61,7 @@ export default function Movies() {
       base.with_genres = selectedGenre;
     }
 
-    if (activeTab === 'top') {
-      base.sort_by = 'vote_average.desc';
-      base['vote_count.gte'] = 100;
-    }
-
-    if (activeTab === 'trending') {
-      base.sort_by = 'popularity.desc';
-    }
+    base.sort_by = 'popularity.desc';
 
     return base;
   };
@@ -81,27 +70,9 @@ export default function Movies() {
     const params = { ...buildParams(), page: targetPage };
     try {
       if (mediaType === 'tv') {
-        if (!selectedGenre && activeTab === 'on-air') {
-          return tmdbService.getOnTheAirTVPage('en', targetPage);
-        }
-        if (!selectedGenre && activeTab === 'top') {
-          return tmdbService.getTopRatedTVPage('en', targetPage);
-        }
-        if (!selectedGenre && activeTab === 'trending') {
-          return tmdbService.getTrendingTVPage('en', 'week', targetPage);
-        }
         return tmdbService.discoverTVPage(params);
       }
 
-      if (!selectedGenre && activeTab === 'now') {
-        return tmdbService.getNowPlayingPage('en', targetPage);
-      }
-      if (!selectedGenre && activeTab === 'top') {
-        return tmdbService.getTopRatedPage('en', targetPage);
-      }
-      if (!selectedGenre && activeTab === 'trending') {
-        return tmdbService.getTrendingPage('en', 'week', targetPage);
-      }
       return tmdbService.discoverMoviesPage(params);
     } catch (error) {
       console.error('Pagination fetch error', error);
@@ -122,7 +93,7 @@ export default function Movies() {
     };
     init();
     return () => { isActive = false; };
-  }, [mediaType, activeTab, selectedGenre, contentLanguage, activeRegional]);
+  }, [mediaType, selectedGenre, contentLanguage, activeRegional]);
 
   const goToPage = async (targetPage) => {
     if (targetPage < 1 || targetPage > totalPages) return;
@@ -155,7 +126,6 @@ export default function Movies() {
     return Array.from({ length: end - start + 1 }, (_, idx) => start + idx);
   };
 
-  const currentTabs = mediaType === 'tv' ? TV_TABS : MOVIE_TABS;
   const pageTitle = mediaType === 'tv' ? 'TV Shows' : 'Movies';
 
   return (
@@ -168,32 +138,29 @@ export default function Movies() {
         </div>
       </div>
 
-      {/* Tabs */}
+      {/* Filters */}
       <div className="movies-controls">
-        <div className="tabs">
-          {currentTabs.map((tab) => (
-            <button
-              key={tab.key}
-              className={`tab ${activeTab === tab.key && !selectedGenre ? 'active' : ''}`}
-              onClick={() => handleTab(tab.key)}
-            >
-              {tab.label}
-            </button>
-          ))}
-        </div>
-
         <div className="filters-row">
-          {/* Regional-only toggle */}
-          <div className="regional-filter">
-            <label className="regional-filter-label">
-              <input
-                type="checkbox"
-                checked={regionalOnly}
-                onChange={(e) => setRegionalOnly(e.target.checked)}
-              />
-              Show regional ({contentLanguage}) content only (OMDB)
-            </label>
-            <p className="regional-filter-note">(Location-based language highlighting; OMDB seeds only)</p>
+          {/* Region Select */}
+          <div className="region-filter" style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
+            <span className="genre-filter-label" style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><FiGlobe size={14} /> Region:</span>
+            <select 
+              value={contentLanguage}
+              onChange={(e) => setContentLanguage(e.target.value)}
+              style={{
+                padding: '6px 12px', 
+                borderRadius: '8px', 
+                border: '1px solid var(--border)', 
+                background: 'var(--bg-secondary)', 
+                color: 'var(--text-primary)',
+                cursor: 'pointer',
+                fontFamily: 'inherit'
+              }}
+            >
+              {LANGUAGES.map(lang => (
+                <option key={lang.code} value={lang.code}>{lang.flag} {lang.name}</option>
+              ))}
+            </select>
           </div>
 
           {/* Genre Filter */}
@@ -220,6 +187,14 @@ export default function Movies() {
           {Array(12).fill(0).map((_, i) => (
             <div key={i} className="skeleton skeleton-card" />
           ))}
+        </div>
+      ) : items.length === 0 ? (
+        <div style={{ textAlign: 'center', padding: '4rem 1rem', color: 'var(--text-secondary)' }} className="fade-in">
+          <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>📭</div>
+          <h2 style={{ fontSize: '1.5rem', color: 'var(--text-primary)', marginBottom: '0.5rem' }}>
+            No {mediaType === 'tv' ? 'shows' : 'movies'} found
+          </h2>
+          <p>Try clearing or adjusting your region and genre filters.</p>
         </div>
       ) : (
         <>

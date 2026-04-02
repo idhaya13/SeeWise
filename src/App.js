@@ -13,6 +13,7 @@ import MyList from './pages/MyList';
 import MovieDetail from './pages/MovieDetail';
 import BookDetail from './pages/BookDetail';
 import AIRecommend from './pages/AIRecommend';
+import NowPlaying from './pages/NowPlaying';
 import Login from './pages/Login';
 
 import './styles/global.css';
@@ -40,6 +41,7 @@ function App() {
               <Route path="/movies" element={<Movies />} />
               <Route path="/tv" element={<Movies />} />
               <Route path="/books" element={<Books />} />
+              <Route path="/now-playing" element={<NowPlaying />} />
               <Route path="/login" element={<Login />} />
               <Route path="/discover" element={<Discover />} />
               <Route path="/my-list" element={<MyList />} />

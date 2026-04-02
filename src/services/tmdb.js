@@ -94,8 +94,8 @@ export const tmdbService = {
   getNowPlaying: (lang = 'en') =>
     tmdb.get('/movie/now_playing', { params: { language: lang } }).then((r) => r.data.results),
 
-  getNowPlayingPage: (lang = 'en', page = 1) =>
-    tmdb.get('/movie/now_playing', { params: { language: lang, page } }).then((r) => r.data),
+  getNowPlayingPage: (lang = 'en', region = 'US', page = 1) =>
+    tmdb.get('/movie/now_playing', { params: { language: lang, region, page } }).then((r) => r.data),
 
   // Get on the air (TV version of now playing)
   getOnTheAirTV: (lang = 'en') =>
