@@ -51,53 +51,6 @@ export default function Movies() {
   const [loading, setLoading] = useState(false);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
 
-  // Check if TMDB API key is configured
-  const hasApiKey = !!process.env.REACT_APP_TMDB_API_KEY;
-
-  if (!hasApiKey) {
-    return (
-      <div className="movies-page container">
-        <div className="page-header">
-          <div>
-            <div className="label">Error</div>
-            <h1 className="page-title">API Configuration Required</h1>
-          </div>
-        </div>
-        <div style={{ textAlign: 'center', padding: '4rem 1rem', color: 'var(--text-secondary)' }} className="fade-in">
-          <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>🔑</div>
-          <h2 style={{ fontSize: '1.5rem', color: 'var(--text-primary)', marginBottom: '0.5rem' }}>
-            TMDB API Key Not Configured
-          </h2>
-          <p style={{ marginBottom: '2rem' }}>
-            The TMDB (The Movie Database) API key is required to fetch movie and TV show data.
-          </p>
-          <div style={{ textAlign: 'left', maxWidth: '600px', margin: '0 auto', background: 'var(--bg-secondary)', padding: '1.5rem', borderRadius: '8px', border: '1px solid var(--border)' }}>
-            <h3 style={{ color: 'var(--text-primary)', marginBottom: '1rem' }}>How to fix this:</h3>
-            <ol style={{ textAlign: 'left', color: 'var(--text-secondary)' }}>
-              <li style={{ marginBottom: '0.5rem' }}>
-                <strong>For Vercel deployment:</strong> Go to your Vercel dashboard → Project Settings → Environment Variables
-              </li>
-              <li style={{ marginBottom: '0.5rem' }}>
-                Add these environment variables:
-                <ul style={{ marginLeft: '1rem', marginTop: '0.5rem' }}>
-                  <li><code style={{ background: 'var(--bg-primary)', padding: '2px 4px', borderRadius: '4px' }}>REACT_APP_TMDB_API_KEY</code> = your TMDB API key</li>
-                  <li><code style={{ background: 'var(--bg-primary)', padding: '2px 4px', borderRadius: '4px' }}>REACT_APP_TMDB_BASE_URL</code> = https://api.themoviedb.org/3</li>
-                  <li><code style={{ background: 'var(--bg-primary)', padding: '2px 4px', borderRadius: '4px' }}>REACT_APP_TMDB_IMAGE_BASE</code> = https://image.tmdb.org/t/p</li>
-                </ul>
-              </li>
-              <li style={{ marginBottom: '0.5rem' }}>
-                Redeploy your application
-              </li>
-              <li>
-                <strong>Get a free TMDB API key at:</strong> <a href="https://www.themoviedb.org/settings/api" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--accent)' }}>themoviedb.org</a>
-              </li>
-            </ol>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   const buildParams = () => {
     const base = { language: 'en' };
     if (activeRegional) {
@@ -172,6 +125,53 @@ export default function Movies() {
     }
     return Array.from({ length: end - start + 1 }, (_, idx) => start + idx);
   };
+
+  // Check if TMDB API key is configured
+  const hasApiKey = !!process.env.REACT_APP_TMDB_API_KEY;
+
+  if (!hasApiKey) {
+    return (
+      <div className="movies-page container">
+        <div className="page-header">
+          <div>
+            <div className="label">Error</div>
+            <h1 className="page-title">API Configuration Required</h1>
+          </div>
+        </div>
+        <div style={{ textAlign: 'center', padding: '4rem 1rem', color: 'var(--text-secondary)' }} className="fade-in">
+          <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>🔑</div>
+          <h2 style={{ fontSize: '1.5rem', color: 'var(--text-primary)', marginBottom: '0.5rem' }}>
+            TMDB API Key Not Configured
+          </h2>
+          <p style={{ marginBottom: '2rem' }}>
+            The TMDB (The Movie Database) API key is required to fetch movie and TV show data.
+          </p>
+          <div style={{ textAlign: 'left', maxWidth: '600px', margin: '0 auto', background: 'var(--bg-secondary)', padding: '1.5rem', borderRadius: '8px', border: '1px solid var(--border)' }}>
+            <h3 style={{ color: 'var(--text-primary)', marginBottom: '1rem' }}>How to fix this:</h3>
+            <ol style={{ textAlign: 'left', color: 'var(--text-secondary)' }}>
+              <li style={{ marginBottom: '0.5rem' }}>
+                <strong>For Vercel deployment:</strong> Go to your Vercel dashboard → Project Settings → Environment Variables
+              </li>
+              <li style={{ marginBottom: '0.5rem' }}>
+                Add these environment variables:
+                <ul style={{ marginLeft: '1rem', marginTop: '0.5rem' }}>
+                  <li><code style={{ background: 'var(--bg-primary)', padding: '2px 4px', borderRadius: '4px' }}>REACT_APP_TMDB_API_KEY</code> = your TMDB API key</li>
+                  <li><code style={{ background: 'var(--bg-primary)', padding: '2px 4px', borderRadius: '4px' }}>REACT_APP_TMDB_BASE_URL</code> = https://api.themoviedb.org/3</li>
+                  <li><code style={{ background: 'var(--bg-primary)', padding: '2px 4px', borderRadius: '4px' }}>REACT_APP_TMDB_IMAGE_BASE</code> = https://image.tmdb.org/t/p</li>
+                </ul>
+              </li>
+              <li style={{ marginBottom: '0.5rem' }}>
+                Redeploy your application
+              </li>
+              <li>
+                <strong>Get a free TMDB API key at:</strong> <a href="https://www.themoviedb.org/settings/api" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--accent)' }}>themoviedb.org</a>
+              </li>
+            </ol>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   const pageTitle = mediaType === 'tv' ? 'TV Shows' : 'Movies';
 
