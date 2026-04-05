@@ -7,10 +7,24 @@ const BASE_URL = process.env.REACT_APP_TMDB_BASE_URL || 'https://api.themoviedb.
 const API_KEY = process.env.REACT_APP_TMDB_API_KEY;
 const IMAGE_BASE = process.env.REACT_APP_TMDB_IMAGE_BASE || 'https://image.tmdb.org/t/p';
 
+// Check if API key is available
+if (!API_KEY) {
+  console.error('TMDB API key is not configured. Please set REACT_APP_TMDB_API_KEY environment variable.');
+}
+
 const tmdb = axios.create({
   baseURL: BASE_URL,
-  params: { api_key: API_KEY },
+  params: API_KEY ? { api_key: API_KEY } : {},
 });
+
+// Add response interceptor for better error handling
+tmdb.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    console.error('TMDB API Error:', error.response?.data || error.message);
+    return Promise.reject(error);
+  }
+);
 
 export const tmdbService = {
   // Get trending movies (daily/weekly)

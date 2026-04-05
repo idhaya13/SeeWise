@@ -44,6 +44,31 @@ export default function Home() {
     if (hero) setTimeout(() => setHeroLoaded(true), 100);
   }, [heroIndex, hero]);
 
+  // Check if TMDB API key is configured
+  const hasApiKey = !!process.env.REACT_APP_TMDB_API_KEY;
+
+  // Show API key error if not configured
+  if (!hasApiKey) {
+    return (
+      <div className="home-page">
+        <div style={{ textAlign: 'center', padding: '4rem 1rem', color: 'var(--text-secondary)', minHeight: '60vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div>
+            <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>🔑</div>
+            <h2 style={{ fontSize: '1.5rem', color: 'var(--text-primary)', marginBottom: '0.5rem' }}>
+              TMDB API Key Required
+            </h2>
+            <p style={{ marginBottom: '2rem' }}>
+              Please configure your TMDB API key to view movies and TV shows.
+            </p>
+            <Link to="/movies" style={{ color: 'var(--accent)', textDecoration: 'underline' }}>
+              View setup instructions →
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="home-page">
       {/* ======================== HERO ======================== */}
