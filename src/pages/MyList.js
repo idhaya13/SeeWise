@@ -17,7 +17,7 @@ export default function MyList() {
     setActivePlaylist,
     createPlaylist,
     deletePlaylist,
-    removeFromPlaylist,
+    removeFromPlaylist, 
     removeFromUserSavedList,
   } = useStore();
 

@@ -45,11 +45,11 @@ export const tmdbService = {
 
   // Get movie details
   getMovieDetails: (id, lang = 'en') =>
-    tmdb.get(`/movie/${id}`, { params: { append_to_response: 'videos,credits,similar', language: lang } }).then((r) => r.data),
+    tmdb.get(`/movie/${id}`, { params: { append_to_response: 'videos,credits,similar,watch/providers', language: lang } }).then((r) => r.data),
 
   // Get TV details
   getTVDetails: (id, lang = 'en') =>
-    tmdb.get(`/tv/${id}`, { params: { append_to_response: 'videos,credits,similar', language: lang } }).then((r) => r.data),
+    tmdb.get(`/tv/${id}`, { params: { append_to_response: 'videos,credits,similar,watch/providers', language: lang } }).then((r) => r.data),
 
   // Discover movies
   discoverMovies: (params = {}) =>

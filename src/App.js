@@ -15,6 +15,7 @@ import MovieDetail from './pages/MovieDetail';
 import BookDetail from './pages/BookDetail';
 import AIRecommend from './pages/AIRecommend';
 import NowPlaying from './pages/NowPlaying';
+import Kids from './pages/Kids';
 import QuickWatch from './pages/QuickWatch';
 import Login from './pages/Login';
 
@@ -45,6 +46,7 @@ function App() {
               <Route path="/tv" element={<Movies />} />
               <Route path="/books" element={<Books />} />
               <Route path="/now-playing" element={<NowPlaying />} />
+              <Route path="/kids" element={<Kids />} />
               <Route path="/quick-watch" element={<QuickWatch />} />
               <Route path="/login" element={<Login />} />
               <Route path="/discover" element={<Discover />} />

@@ -59,6 +59,32 @@ export default function MovieDetail() {
   const similar = isOmdb ? [] : item.similar?.results?.slice(0, 8) || [];
   const cast = isOmdb ? [] : item.credits?.cast?.slice(0, 8) || [];
 
+  const getProviders = (data) => {
+    if (!data || !data['watch/providers'] || !data['watch/providers'].results) return null;
+    const res = data['watch/providers'].results;
+    return res.US || res.IN || Object.values(res)[0] || null;
+  };
+  const providerData = isOmdb ? null : getProviders(item);
+  const streamProviders = providerData?.flatrate || [];
+  const rentBuyProviders = [...(providerData?.rent || []), ...(providerData?.buy || [])]
+    .filter((v, i, a) => a.findIndex((t) => t.provider_id === v.provider_id) === i);
+  const providerLink = providerData?.link;
+
+  const getDirectPlatformLink = (providerName, defaultLink) => {
+    const name = providerName.toLowerCase();
+    const encodedTitle = encodeURIComponent(title);
+    if (name.includes('netflix')) return `https://www.netflix.com/search?q=${encodedTitle}`;
+    if (name.includes('amazon prime') || name.includes('prime video')) return `https://www.amazon.com/s?k=${encodedTitle}&i=instant-video`;
+    if (name.includes('disney')) return `https://www.disneyplus.com/search?q=${encodedTitle}`;
+    if (name.includes('hulu')) return `https://www.hulu.com/search?q=${encodedTitle}`;
+    if (name.includes('max') || name.includes('hbo')) return `https://play.max.com/search/${encodedTitle}`;
+    if (name.includes('apple tv')) return `https://tv.apple.com/search?term=${encodedTitle}`;
+    if (name.includes('peacock')) return `https://www.peacocktv.com/search?q=${encodedTitle}`;
+    if (name.includes('youtube')) return `https://www.youtube.com/results?search_query=${encodedTitle}+movie`;
+    if (name.includes('google play')) return `https://play.google.com/store/search?q=${encodedTitle}&c=movies`;
+    return defaultLink;
+  };
+
   const handleRate = (ratingValue) => {
     if (!currentUser) {
       toast.error('Please login to rate movies.');
@@ -220,6 +246,44 @@ export default function MovieDetail() {
             </div>
           </div>
         </div>
+
+        {/* PROVIDERS */}
+        {(streamProviders.length > 0 || rentBuyProviders.length > 0) && (
+          <section className="section providers-section">
+            <h2 className="section-title">📺 Where to Watch</h2>
+             {streamProviders.length > 0 && (
+               <div className="providers-group">
+                 <h3 className="providers-group-title">Stream</h3>
+                 <div className="providers-list">
+                   {streamProviders.map(p => (
+                     <a href={getDirectPlatformLink(p.provider_name, providerLink)} target="_blank" rel="noreferrer" key={`stream-${p.provider_id}`} className="provider-item" title={p.provider_name}>
+                       <img src={tmdbService.getImageUrl(p.logo_path, 'w92')} alt={p.provider_name} className="provider-logo" />
+                       <span className="provider-name">{p.provider_name}</span>
+                     </a>
+                   ))}
+                 </div>
+               </div>
+             )}
+             {rentBuyProviders.length > 0 && (
+               <div className="providers-group">
+                 <h3 className="providers-group-title">Rent / Buy</h3>
+                 <div className="providers-list">
+                   {rentBuyProviders.map(p => (
+                     <a href={getDirectPlatformLink(p.provider_name, providerLink)} target="_blank" rel="noreferrer" key={`rentbuy-${p.provider_id}`} className="provider-item" title={p.provider_name}>
+                       <img src={tmdbService.getImageUrl(p.logo_path, 'w92')} alt={p.provider_name} className="provider-logo" />
+                       <span className="provider-name">{p.provider_name}</span>
+                     </a>
+                   ))}
+                 </div>
+               </div>
+             )}
+             {providerLink && (
+               <a href={providerLink} target="_blank" rel="noreferrer" className="provider-link-btn">
+                 View all options on TMDB
+               </a>
+             )}
+          </section>
+        )}
 
         {/* CAST */}
         {cast.length > 0 && (

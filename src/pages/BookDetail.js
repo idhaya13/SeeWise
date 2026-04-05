@@ -126,6 +126,30 @@ export default function BookDetail() {
             </div>
           </div>
         </div>
+
+        {/* PROVIDERS / WHERE TO READ */}
+        <section className="section providers-section" style={{ marginTop: '2rem' }}>
+          <h2 className="section-title">📚 Where to Find</h2>
+          <div className="providers-group">
+            <div className="providers-list">
+              <a href={`https://www.amazon.com/s?k=${encodeURIComponent(`${book.title} ${book.author}`)}`} target="_blank" rel="noreferrer" className="provider-link-btn" style={{ background: '#FF9900', color: '#111', border: 'none' }}>
+                🛒 Amazon
+              </a>
+              <a href={`https://www.goodreads.com/search?q=${encodeURIComponent(book.title)}`} target="_blank" rel="noreferrer" className="provider-link-btn" style={{ background: '#EAE6D1', color: '#382110', border: 'none' }}>
+                📖 Goodreads
+              </a>
+              <a href={`https://books.google.com/books?q=${encodeURIComponent(`${book.title} ${book.author}`)}`} target="_blank" rel="noreferrer" className="provider-link-btn" style={{ background: '#4285F4', color: '#fff', border: 'none' }}>
+                🔍 Google Books
+              </a>
+              {olUrl && (
+                <a href={olUrl} target="_blank" rel="noreferrer" className="provider-link-btn" style={{ background: '#E2D8C3', color: '#333', border: 'none' }}>
+                  🏛️ Open Library
+                </a>
+              )}
+            </div>
+          </div>
+        </section>
+
       </div>
     </div>
   );

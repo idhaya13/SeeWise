@@ -7,7 +7,19 @@ import useStore from '../store/useStore';
 import './Movies.css';
 
 export default function QuickWatch() {
-  const { contentLanguage } = useStore();
+  const { contentLanguage, setContentLanguage } = useStore();
+
+  const LANGUAGES = [
+    { code: 'en', label: 'English' },
+    { code: 'hi', label: 'Hindi' },
+    { code: 'te', label: 'Telugu' },
+    { code: 'es', label: 'Spanish' },
+    { code: 'fr', label: 'French' },
+    { code: 'ja', label: 'Japanese' },
+    { code: 'ko', label: 'Korean' },
+    { code: 'zh', label: 'Chinese' },
+    { code: 'tl', label: 'Tagalog' }
+  ];
 
   const [mediaType, setMediaType] = useState('movie'); // 'movie', 'tv', 'book'
   const [maxTime, setMaxTime] = useState(120); // minutes
@@ -205,19 +217,39 @@ export default function QuickWatch() {
           </div>
         </div>
 
-        {/* GENRE */}
-        <div>
-          <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600 }}>Preferred Genre</label>
-          <select 
-            className="filter-select" 
-            style={{ width: '100%', maxWidth: '300px' }}
-            value={selectedGenre} 
-            onChange={(e) => setSelectedGenre(e.target.value)}
-          >
-            {genres.map(g => (
-              <option key={g.id} value={g.id}>{g.name}</option>
-            ))}
-          </select>
+        {/* FILTERS */}
+        <div style={{ display: 'flex', gap: '2rem', flexWrap: 'wrap' }}>
+          {/* GENRE */}
+          <div style={{ flex: '1 1 200px' }}>
+            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600 }}>Preferred Genre</label>
+            <select 
+              className="filter-select" 
+              style={{ width: '100%' }}
+              value={selectedGenre} 
+              onChange={(e) => setSelectedGenre(e.target.value)}
+            >
+              {genres.map(g => (
+                <option key={g.id} value={g.id}>{g.name}</option>
+              ))}
+            </select>
+          </div>
+
+          {/* LANGUAGE */}
+          {mediaType !== 'book' && (
+            <div style={{ flex: '1 1 200px' }}>
+              <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600 }}>Language</label>
+              <select 
+                className="filter-select" 
+                style={{ width: '100%' }}
+                value={contentLanguage} 
+                onChange={(e) => setContentLanguage(e.target.value)}
+              >
+                {LANGUAGES.map(lang => (
+                  <option key={lang.code} value={lang.code}>{lang.label}</option>
+                ))}
+              </select>
+            </div>
+          )}
         </div>
       </div>
 

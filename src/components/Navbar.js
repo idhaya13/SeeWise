@@ -13,6 +13,7 @@ const NAV_LINKS = [
   { to: '/movies', label: 'Movies', icon: <FiFilm /> },
   { to: '/tv', label: 'TV Shows', icon: <FiTv /> },
   { to: '/now-playing', label: 'In Theaters', icon: <FiPlayCircle /> },
+  { to: '/kids', label: 'Kids', icon: <span style={{fontSize: '1em'}}>🧸</span> },
   { to: '/books', label: 'Books', icon: <FiBook /> },
   { to: '/quick-watch', label: 'QuickWatch', icon: <FiClock /> },
   { to: '/discover', label: 'Discover', icon: <FiCompass /> },
