@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { FiEye, FiEyeOff } from 'react-icons/fi';
 import useStore from '../store/useStore';
 import './Login.css';
 
@@ -7,6 +8,7 @@ export default function Login() {
   const { loginUser, registerUser } = useStore();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [mode, setMode] = useState('login');
   const [error, setError] = useState('');
   const navigate = useNavigate();
@@ -43,7 +45,21 @@ export default function Login() {
           </label>
           <label>
             Password
-            <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} />
+            <div className="password-input-container">
+              <input 
+                type={showPassword ? "text" : "password"} 
+                value={password} 
+                onChange={(e) => setPassword(e.target.value)} 
+              />
+              <button 
+                type="button" 
+                className="password-toggle" 
+                onClick={() => setShowPassword(!showPassword)}
+                aria-label={showPassword ? "Hide password" : "Show password"}
+              >
+                {showPassword ? <FiEyeOff /> : <FiEye />}
+              </button>
+            </div>
           </label>
           {error && <p className="error-message">{error}</p>}
           <button type="submit" className="btn btn-primary">{mode === 'login' ? 'Login' : 'Register'}</button>

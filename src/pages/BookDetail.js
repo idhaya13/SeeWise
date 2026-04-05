@@ -7,6 +7,7 @@ import { BsBookmark, BsBookmarkFill } from 'react-icons/bs';
 import booksService from '../services/books';
 import useStore from '../store/useStore';
 import toast from 'react-hot-toast';
+import Comments from '../components/Comments';
 import './Detail.css';
 
 export default function BookDetail() {
@@ -150,6 +151,8 @@ export default function BookDetail() {
           </div>
         </section>
 
+        {/* COMMENTS */}
+        <Comments itemId={book.id} />
       </div>
     </div>
   );

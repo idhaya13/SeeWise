@@ -255,6 +255,73 @@ const useStore = create(
         if (user && user.ratings) return user.ratings[itemId] || 0;
         return get().ratings[itemId] || 0;
       },
+
+      // --- Comments ---
+      comments: {}, // global fallback for unauthenticated users
+      addComment: (itemId, comment) => {
+        const user = get().currentUser;
+        const commentData = {
+          id: Date.now().toString(),
+          text: comment,
+          timestamp: Date.now(),
+          userId: user ? user.id : 'guest',
+          username: user ? user.username : 'Guest',
+        };
+        if (user) {
+          const userComments = user.comments || {};
+          const updatedUser = {
+            ...user,
+            comments: {
+              ...userComments,
+              [itemId]: [...(userComments[itemId] || []), commentData],
+            },
+          };
+          set({
+            currentUser: updatedUser,
+            users: get().users.map((u) => (u.id === user.id ? updatedUser : u)),
+          });
+        } else {
+          const globalComments = get().comments;
+          set({
+            comments: {
+              ...globalComments,
+              [itemId]: [...(globalComments[itemId] || []), commentData],
+            },
+          });
+        }
+      },
+      getComments: (itemId) => {
+        const user = get().currentUser;
+        if (user && user.comments) {
+          return user.comments[itemId] || [];
+        }
+        return get().comments[itemId] || [];
+      },
+      deleteComment: (itemId, commentId) => {
+        const user = get().currentUser;
+        if (user) {
+          const userComments = user.comments || {};
+          const updatedUser = {
+            ...user,
+            comments: {
+              ...userComments,
+              [itemId]: (userComments[itemId] || []).filter(c => c.id !== commentId),
+            },
+          };
+          set({
+            currentUser: updatedUser,
+            users: get().users.map((u) => (u.id === user.id ? updatedUser : u)),
+          });
+        } else {
+          const globalComments = get().comments;
+          set({
+            comments: {
+              ...globalComments,
+              [itemId]: (globalComments[itemId] || []).filter(c => c.id !== commentId),
+            },
+          });
+        }
+      },
     }),
     {
       name: 'seewise-storage',
@@ -269,6 +336,7 @@ const useStore = create(
         users: state.users,
         currentUser: state.currentUser,
         ratings: state.ratings,
+        comments: state.comments,
       }),
     }
   )

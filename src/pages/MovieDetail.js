@@ -9,6 +9,7 @@ import omdbService from '../services/omdb';
 import MediaCard from '../components/MediaCard';
 import useStore from '../store/useStore';
 import toast from 'react-hot-toast';
+import Comments from '../components/Comments';
 import './Detail.css';
 
 export default function MovieDetail() {
@@ -318,6 +319,9 @@ export default function MovieDetail() {
             </div>
           </section>
         )}
+
+        {/* COMMENTS */}
+        <Comments itemId={itemKey} />
       </div>
     </div>
   );
