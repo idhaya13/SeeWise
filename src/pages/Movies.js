@@ -32,6 +32,10 @@ export default function Movies() {
   const location = useLocation();
   const mediaType = location.pathname.includes('/tv') ? 'tv' : 'movie';
   const [selectedGenre, setSelectedGenre] = useState(null);
+  const [apiError, setApiError] = useState(null);
+
+  // Check if TMDB API key is configured
+  const hasApiKey = !!process.env.REACT_APP_TMDB_API_KEY;
 
   // Sync state with URL if it changes (e.g. clicking different nav links)
   useEffect(() => {
@@ -39,10 +43,10 @@ export default function Movies() {
   }, [location.pathname]);
 
   // Dynamic Genre Fetching
-  const { data: genres = [] } = useQuery(
+  const { data: genres = [], error: genresError } = useQuery(
     ['genres', mediaType, 'en'],
     () => mediaType === 'tv' ? tmdbService.getTVGenres('en') : tmdbService.getMovieGenres('en'),
-    { staleTime: 24 * 60 * 60 * 1000 }
+    { staleTime: 24 * 60 * 60 * 1000, enabled: hasApiKey }
   );
 
   const [page, setPage] = useState(1);
@@ -76,6 +80,7 @@ export default function Movies() {
       return tmdbService.discoverMoviesPage(params);
     } catch (error) {
       console.error('Pagination fetch error', error);
+      setApiError(error);
       return { results: [], page: 1, total_pages: 1 };
     }
   };
@@ -126,25 +131,27 @@ export default function Movies() {
     return Array.from({ length: end - start + 1 }, (_, idx) => start + idx);
   };
 
-  // Check if TMDB API key is configured
-  const hasApiKey = !!process.env.REACT_APP_TMDB_API_KEY;
+  const authError = genresError || apiError;
+  const apiErrorMessage = !hasApiKey
+    ? 'TMDB API key is not configured. Please set REACT_APP_TMDB_API_KEY in your deployment environment.'
+    : authError?.message;
 
-  if (!hasApiKey) {
+  if (!hasApiKey || authError) {
     return (
       <div className="movies-page container">
         <div className="page-header">
           <div>
             <div className="label">Error</div>
-            <h1 className="page-title">API Configuration Required</h1>
+            <h1 className="page-title">{!hasApiKey ? 'API Configuration Required' : 'TMDB Authorization Error'}</h1>
           </div>
         </div>
         <div style={{ textAlign: 'center', padding: '4rem 1rem', color: 'var(--text-secondary)' }} className="fade-in">
           <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>🔑</div>
           <h2 style={{ fontSize: '1.5rem', color: 'var(--text-primary)', marginBottom: '0.5rem' }}>
-            TMDB API Key Not Configured
+            {!hasApiKey ? 'TMDB API Key Required' : 'Unable to load movies and TV shows'}
           </h2>
           <p style={{ marginBottom: '2rem' }}>
-            The TMDB (The Movie Database) API key is required to fetch movie and TV show data.
+            {apiErrorMessage}
           </p>
           <div style={{ textAlign: 'left', maxWidth: '600px', margin: '0 auto', background: 'var(--bg-secondary)', padding: '1.5rem', borderRadius: '8px', border: '1px solid var(--border)' }}>
             <h3 style={{ color: 'var(--text-primary)', marginBottom: '1rem' }}>How to fix this:</h3>

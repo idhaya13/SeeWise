@@ -17,13 +17,44 @@ const tmdb = axios.create({
   params: API_KEY ? { api_key: API_KEY } : {},
 });
 
+const createTmdbError = (error) => {
+  const status = error?.response?.status;
+  const apiMessage = error?.response?.data?.status_message || error?.message || 'Unknown TMDB error';
+  let message;
+
+  if (!API_KEY) {
+    message = 'TMDB API key is not configured. Please set REACT_APP_TMDB_API_KEY in your deployment environment.';
+  } else if (status === 401) {
+    message = 'TMDB authorization failed. Your API key is missing, invalid, or not allowed. Check REACT_APP_TMDB_API_KEY in Vercel or your local .env file.';
+  } else {
+    message = `TMDB request failed (${status || 'unknown'}). ${apiMessage}`;
+  }
+
+  const err = new Error(message);
+  err.status = status;
+  err.isTmdb = true;
+  return err;
+};
+
+// Prevent requests without a configured key and normalize errors
+if (!API_KEY) {
+  console.warn('TMDB API key is not configured. Please set REACT_APP_TMDB_API_KEY environment variable.');
+}
+
+tmdb.interceptors.request.use(
+  (config) => {
+    if (!API_KEY) {
+      return Promise.reject(createTmdbError({ response: { status: 401, data: { status_message: 'TMDB API key missing' } } }));
+    }
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
+
 // Add response interceptor for better error handling
 tmdb.interceptors.response.use(
   (response) => response,
-  (error) => {
-    console.error('TMDB API Error:', error.response?.data || error.message);
-    return Promise.reject(error);
-  }
+  (error) => Promise.reject(createTmdbError(error))
 );
 
 export const tmdbService = {

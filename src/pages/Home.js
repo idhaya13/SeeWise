@@ -18,10 +18,25 @@ export default function Home() {
   const [heroLoaded, setHeroLoaded] = useState(false);
   const { addToWatchlist, removeFromWatchlist, isInWatchlist, contentLanguage } = useStore();
 
+  // Check if TMDB API key is configured
+  const hasApiKey = !!process.env.REACT_APP_TMDB_API_KEY;
+
   // Keep core home feed in English by default; regional fetch is done in specific tabs
-  const { data: trending = [] } = useQuery(['trending-movies', 'en'], () => tmdbService.getTrending('en'), { staleTime: 5 * 60 * 1000 });
-  const { data: trendingTV = [] } = useQuery(['trending-tv', 'en'], () => tmdbService.getTrendingTV('en'), { staleTime: 5 * 60 * 1000 });
-  const { data: topRated = [] } = useQuery(['top-rated', 'en'], () => tmdbService.getTopRated('en'), { staleTime: 10 * 60 * 1000 });
+  const { data: trending = [], error: trendingError } = useQuery(
+    ['trending-movies', 'en'],
+    () => tmdbService.getTrending('en'),
+    { staleTime: 5 * 60 * 1000, enabled: hasApiKey }
+  );
+  const { data: trendingTV = [], error: trendingTVError } = useQuery(
+    ['trending-tv', 'en'],
+    () => tmdbService.getTrendingTV('en'),
+    { staleTime: 5 * 60 * 1000, enabled: hasApiKey }
+  );
+  const { data: topRated = [], error: topRatedError } = useQuery(
+    ['top-rated', 'en'],
+    () => tmdbService.getTopRated('en'),
+    { staleTime: 10 * 60 * 1000, enabled: hasApiKey }
+  );
   const { data: featuredBooks = [] } = useQuery('featured-books', () => booksService.getTrendingBySubject('fiction'), { staleTime: 10 * 60 * 1000 });
   const { data: scifiBooks = [] } = useQuery('scifi-books', () => booksService.getTrendingBySubject('science-fiction'), { staleTime: 10 * 60 * 1000 });
 
@@ -44,21 +59,23 @@ export default function Home() {
     if (hero) setTimeout(() => setHeroLoaded(true), 100);
   }, [heroIndex, hero]);
 
-  // Check if TMDB API key is configured
-  const hasApiKey = !!process.env.REACT_APP_TMDB_API_KEY;
+  const tmdbError = trendingError || trendingTVError || topRatedError;
+  const apiErrorMessage = !hasApiKey
+    ? 'TMDB API key is not configured. Please set REACT_APP_TMDB_API_KEY in your deployment environment.'
+    : tmdbError?.message;
 
-  // Show API key error if not configured
-  if (!hasApiKey) {
+  // Show API key or TMDB authorization error if needed
+  if (!hasApiKey || tmdbError) {
     return (
       <div className="home-page">
         <div style={{ textAlign: 'center', padding: '4rem 1rem', color: 'var(--text-secondary)', minHeight: '60vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <div>
             <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>🔑</div>
             <h2 style={{ fontSize: '1.5rem', color: 'var(--text-primary)', marginBottom: '0.5rem' }}>
-              TMDB API Key Required
+              { !hasApiKey ? 'TMDB API Key Required' : 'TMDB Authorization Error' }
             </h2>
             <p style={{ marginBottom: '2rem' }}>
-              Please configure your TMDB API key to view movies and TV shows.
+              {apiErrorMessage}
             </p>
             <Link to="/movies" style={{ color: 'var(--accent)', textDecoration: 'underline' }}>
               View setup instructions →
