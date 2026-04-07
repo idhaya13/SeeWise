@@ -80,13 +80,64 @@ export const tmdbService = {
     return tmdb.get(`/trending/tv/${window}`, { params: { language: lang, page } }).then((r) => r.data);
   },
 
-  // Search movies
-  searchMovies: (query, lang = 'en') =>
-    tmdb.get('/search/movie', { params: { query, language: lang } }).then((r) => r.data.results),
+  // Languages to search across for comprehensive results
+  SEARCH_LANGUAGES: ['en', 'es', 'fr', 'de', 'it', 'pt', 'ru', 'ja', 'zh', 'ko', 'hi', 'ar', 'th', 'bn', 'tr', 'nl', 'pl', 'uk', 'id', 'vi', 'tl', 'te', 'ta', 'kn', 'ml', 'mr'],
 
-  // Search TV shows
-  searchTV: (query, lang = 'en') =>
-    tmdb.get('/search/tv', { params: { query, language: lang } }).then((r) => r.data.results),
+  // Search movies across all popular languages and merge results - show all matches
+  searchMovies: async (query) => {
+    const searchLanguages = tmdbService.SEARCH_LANGUAGES;
+    const results = await Promise.allSettled(
+      searchLanguages.map(lang =>
+        tmdb.get('/search/movie', { params: { query, language: lang, include_adult: true } }).then((r) => r.data.results)
+      )
+    );
+    
+    // Merge results and deduplicate by ID
+    const seen = new Set();
+    const merged = [];
+    
+    results.forEach((result) => {
+      if (result.status === 'fulfilled') {
+        result.value.forEach((movie) => {
+          if (!seen.has(movie.id)) {
+            seen.add(movie.id);
+            merged.push(movie);
+          }
+        });
+      }
+    });
+    
+    // Sort by popularity/rating - return ALL results
+    return merged.sort((a, b) => (b.popularity || 0) - (a.popularity || 0));
+  },
+
+  // Search TV shows across all popular languages and merge results - show all matches
+  searchTV: async (query) => {
+    const searchLanguages = tmdbService.SEARCH_LANGUAGES;
+    const results = await Promise.allSettled(
+      searchLanguages.map(lang =>
+        tmdb.get('/search/tv', { params: { query, language: lang, include_adult: true } }).then((r) => r.data.results)
+      )
+    );
+    
+    // Merge results and deduplicate by ID
+    const seen = new Set();
+    const merged = [];
+    
+    results.forEach((result) => {
+      if (result.status === 'fulfilled') {
+        result.value.forEach((show) => {
+          if (!seen.has(show.id)) {
+            seen.add(show.id);
+            merged.push(show);
+          }
+        });
+      }
+    });
+    
+    // Sort by popularity/rating - return ALL results
+    return merged.sort((a, b) => (b.popularity || 0) - (a.popularity || 0));
+  },
 
   // Get movie details
   getMovieDetails: (id, lang = 'en') =>

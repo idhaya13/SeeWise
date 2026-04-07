@@ -156,7 +156,7 @@ export default function Books() {
 
           {totalPages > 1 && (
             <div className="pagination-controls" style={{ marginTop: '2rem', textAlign: 'center' }}>
-              <div className="page-nav" style={{ display: 'inline-flex', gap: '0.25rem', flexWrap: 'wrap', justifyContent: 'center' }}>
+              <div className="page-nav" style={{ display: 'inline-flex', gap: '0.25rem', justifyContent: 'center', overflowX: 'auto', maxWidth: '100%' }}>
                 <button 
                   className="btn btn-secondary" 
                   disabled={page <= 1 || isLoading2} 
@@ -175,7 +175,7 @@ export default function Books() {
                   </button>
                 ))}
                 {totalPages > getPageList().length && page < totalPages - 2 && (
-                  <span className="dot-spacer" style={{ alignSelf: 'center' }}>...</span>
+                  <span className="dot-spacer" style={{ alignSelf: 'center', padding: '0 0.5rem' }}>...</span>
                 )}
                 <button 
                   className="btn btn-secondary" 

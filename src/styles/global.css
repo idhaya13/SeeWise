@@ -563,24 +563,39 @@ h1, h2, h3, h4, h5 {
 }
 
 /* ============================================================
-   HORIZONTAL SCROLL ROW
+   PAGINATION
    ============================================================ */
-.scroll-row {
-  display: flex;
-  gap: 1rem;
-  overflow-x: auto;
-  padding-bottom: 1rem;
-  scrollbar-width: thin;
-  scrollbar-color: var(--border-hover) transparent;
+.pagination-controls {
+  margin-top: 2rem;
 }
 
-.scroll-row::-webkit-scrollbar {
-  height: 4px;
+.page-nav {
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
 }
 
-.scroll-row .media-card {
-  flex: 0 0 160px;
-  width: 160px;
+.page-nav::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, and Opera */
+}
+
+.dot-spacer {
+  user-select: none;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+/* Mobile responsive pagination */
+@media (max-width: 768px) {
+  .page-nav {
+    max-width: calc(100vw - 2rem);
+    padding: 0 0.5rem;
+  }
+  
+  .page-nav button {
+    min-width: 40px;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.85rem;
+  }
 }
 
 /* ============================================================
@@ -771,6 +786,82 @@ h1, h2, h3, h4, h5 {
   .tabs {
     overflow-x: auto;
     max-width: 100%;
+  }
+
+  /* Mobile touch targets */
+  button, .btn, input, select, textarea {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  /* Better mobile spacing */
+  .section-title {
+    font-size: clamp(1.2rem, 4vw, 1.8rem);
+    margin-bottom: 1rem;
+  }
+
+  /* Mobile modal improvements */
+  .modal-overlay {
+    padding: 1rem;
+  }
+
+  .modal {
+    max-height: 90vh;
+    margin: 0;
+  }
+}
+
+@media (max-width: 480px) {
+  .container {
+    padding: 0 0.75rem;
+  }
+
+  .grid-4, .grid-5 {
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  }
+
+  .section {
+    padding: 1.5rem 0;
+  }
+
+  .hero {
+    min-height: 60vh;
+  }
+
+  /* Smaller mobile screens */
+  .display-title {
+    font-size: clamp(2rem, 8vw, 3rem);
+  }
+
+  .page-title {
+    font-size: clamp(1.5rem, 6vw, 2.5rem);
+  }
+
+  /* Mobile card improvements */
+  .media-card {
+    aspect-ratio: 3/4;
+  }
+
+  /* Better mobile buttons */
+  .btn {
+    padding: 0.7rem 1.2rem;
+    font-size: 0.9rem;
+  }
+
+  .btn-sm {
+    padding: 0.5rem 1rem;
+    font-size: 0.85rem;
+  }
+
+  /* Mobile search improvements */
+  .search-input {
+    padding: 0.8rem 1rem 0.8rem 2.5rem;
+    font-size: 0.9rem;
+  }
+
+  .search-icon {
+    left: 0.9rem;
+    font-size: 1rem;
   }
 }
 

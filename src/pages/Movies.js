@@ -259,7 +259,7 @@ export default function Movies() {
           </div>
 
           <div className="pagination-controls" style={{ marginTop: '1.25rem', textAlign: 'center' }}>
-            <div className="page-nav" style={{ marginBottom: '0.75rem', display: 'inline-flex', gap: '0.25rem', flexWrap: 'wrap', justifyContent: 'center' }}>
+            <div className="page-nav" style={{ marginBottom: '0.75rem', display: 'inline-flex', gap: '0.25rem', justifyContent: 'center', overflowX: 'auto', maxWidth: '100%' }}>
               <button
                 className="btn btn-secondary"
                 disabled={page <= 1 || loading}
@@ -278,7 +278,7 @@ export default function Movies() {
                 </button>
               ))}
               {totalPages > getPageList().length && page < totalPages - 4 && (
-                <span className="dot-spacer" style={{ alignSelf: 'center' }}>...</span>
+                <span className="dot-spacer" style={{ alignSelf: 'center', padding: '0 0.5rem' }}>...</span>
               )}
               <button
                 className="btn btn-secondary"

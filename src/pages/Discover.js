@@ -4,7 +4,6 @@ import { useSearchParams } from 'react-router-dom';
 import { useQuery } from 'react-query';
 import { FiSearch } from 'react-icons/fi';
 import tmdbService from '../services/tmdb';
-import useStore from '../store/useStore';
 import booksService from '../services/books';
 import MediaCard from '../components/MediaCard';
 import './Movies.css';
@@ -18,7 +17,6 @@ const TABS = [
 ];
 
 export default function Discover() {
-  const { language } = useStore();
   const [searchParams, setSearchParams] = useSearchParams();
   const qParam = searchParams.get('q') || '';
 
@@ -34,14 +32,14 @@ export default function Discover() {
   }, [qParam]);
 
   const { data: movieResults = [], isLoading: moviesLoading } = useQuery(
-    ['search-movies', searchTerm, language],
-    () => tmdbService.searchMovies(searchTerm, language),
+    ['search-movies', searchTerm],
+    () => tmdbService.searchMovies(searchTerm),
     { enabled: !!searchTerm }
   );
 
   const { data: tvResults = [], isLoading: tvLoading } = useQuery(
-    ['search-tv', searchTerm, language],
-    () => tmdbService.searchTV(searchTerm, language),
+    ['search-tv', searchTerm],
+    () => tmdbService.searchTV(searchTerm),
     { enabled: !!searchTerm }
   );
 

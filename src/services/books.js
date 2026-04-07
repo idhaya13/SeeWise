@@ -95,20 +95,20 @@ const formatGBBook = (item) => {
 };
 
 export const booksService = {
-  // Search books via Open Library (no key needed!)
+  // Search books via Open Library (no key needed!) - show all results
   searchOpenLibrary: async (query) => {
     const res = await openLibraryGet('/search.json', {
       q: query,
-      limit: 20,
+      limit: 100,
       fields: 'key,title,author_name,cover_i,first_publish_year,subject,ratings_average,ratings_count,first_sentence,number_of_pages_median',
     });
     return (res.data.docs || []).map(formatOLBook);
   },
 
-  // Search books via Google Books
+  // Search books via Google Books - show all results
   searchGoogleBooks: async (query) => {
     const res = await gbClient.get('/volumes', {
-      params: { q: query, maxResults: 20, printType: 'books' },
+      params: { q: query, maxResults: 40, printType: 'books' },
     });
     return (res.data.items || []).map(formatGBBook);
   },
@@ -225,7 +225,7 @@ export const booksService = {
     return (res.data.items || []).map(formatGBBook);
   },
 
-  // Combined search: try both APIs and merge results
+  // Combined search: try both APIs and merge results - return ALL results
   searchBooks: async (query) => {
     try {
       const [olResults, gbResults] = await Promise.allSettled([
@@ -234,7 +234,7 @@ export const booksService = {
       ]);
       const ol = olResults.status === 'fulfilled' ? olResults.value : [];
       const gb = gbResults.status === 'fulfilled' ? gbResults.value : [];
-      // Merge, deduplicate by title similarity
+      // Merge, deduplicate by title similarity - return ALL unique results
       const seen = new Set();
       const merged = [...ol, ...gb].filter((b) => {
         const key = b.title?.toLowerCase().trim();
@@ -242,6 +242,7 @@ export const booksService = {
         seen.add(key);
         return true;
       });
+      // Return all merged unique results without limiting
       return merged;
     } catch (e) {
       console.error('Book search error:', e);

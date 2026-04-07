@@ -40,13 +40,6 @@
   padding-top: 0.4rem;
 }
 
-@media (max-width: 600px) {
-  .tabs {
-    width: 100%;
-    overflow-x: auto;
-  }
-}
-
 .filters-row {
   display: flex;
   align-items: center;
@@ -72,4 +65,65 @@
 .regional-filter-note {
   font-size: 0.75rem;
   color: var(--text-secondary);
+}
+
+/* Mobile responsive styles */
+@media (max-width: 768px) {
+  .movies-page {
+    padding-top: 1.5rem;
+    padding-bottom: 3rem;
+  }
+
+  .page-header {
+    margin-bottom: 1.5rem;
+    padding-top: 0.5rem;
+  }
+
+  .movies-controls {
+    margin-bottom: 1.5rem;
+    gap: 1rem;
+  }
+
+  .filters-row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 1rem;
+  }
+
+  .genre-filter {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.5rem;
+  }
+
+  .genre-filter-label {
+    padding-top: 0;
+    margin-bottom: 0.5rem;
+  }
+
+  .chip-group {
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  .chip {
+    padding: 0.4rem 0.8rem;
+    font-size: 0.8rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .movies-page {
+    padding-top: 1rem;
+    padding-bottom: 2rem;
+  }
+
+  .page-title {
+    font-size: clamp(1.5rem, 6vw, 2.5rem);
+  }
+
+  .chip {
+    padding: 0.35rem 0.7rem;
+    font-size: 0.75rem;
+  }
 }
