@@ -1,6 +1,6 @@
 // src/pages/Home.js
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useQuery } from 'react-query';
 import { FiInfo, FiZap, FiTrendingUp, FiBook, FiChevronRight } from 'react-icons/fi';
 import { BsBookmark, BsBookmarkFill } from 'react-icons/bs';
@@ -16,7 +16,8 @@ const MOODS = ['😊 Feel Good', '😱 Thrilling', '🥺 Emotional', '🤣 Comed
 export default function Home() {
   const [heroIndex, setHeroIndex] = useState(0);
   const [heroLoaded, setHeroLoaded] = useState(false);
-  const { addToWatchlist, removeFromWatchlist, isInWatchlist, contentLanguage } = useStore();
+  const { addToWatchlist, removeFromWatchlist, isInWatchlist, contentLanguage, currentUser, isGuest, enterGuestMode } = useStore();
+  const navigate = useNavigate();
 
   // Check if TMDB API key is configured
   const hasApiKey = !!process.env.REACT_APP_TMDB_API_KEY;
@@ -80,6 +81,58 @@ export default function Home() {
             <Link to="/movies" style={{ color: 'var(--accent)', textDecoration: 'underline' }}>
               View setup instructions →
             </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Show login prompt for new users (not logged in and not in guest mode)
+  if (!currentUser && !isGuest) {
+    return (
+      <div className="home-page">
+        <div className="login-prompt-overlay">
+          <div className="login-prompt-card">
+            <div className="login-prompt-icon">🎬</div>
+            <h1>Welcome to FlickBook</h1>
+            <p>Your AI-powered movie and book recommendation app</p>
+            
+            <div className="login-prompt-actions">
+              <button 
+                className="btn btn-primary btn-lg"
+                onClick={() => navigate('/login')}
+              >
+                Sign In / Create Account
+              </button>
+              <button 
+                className="btn btn-secondary btn-lg"
+                onClick={() => {
+                  const confirmed = window.confirm(
+                    'Continuing as guest means you won\'t get personalized recommendations, save playlists, or rate content. Are you sure you want to continue?'
+                  );
+                  if (confirmed) {
+                    enterGuestMode();
+                  }
+                }}
+              >
+                Continue as Guest
+              </button>
+            </div>
+            
+            <div className="login-prompt-features">
+              <div className="feature">
+                <span className="feature-icon">🤖</span>
+                <span>AI Recommendations</span>
+              </div>
+              <div className="feature">
+                <span className="feature-icon">📚</span>
+                <span>Movies & Books</span>
+              </div>
+              <div className="feature">
+                <span className="feature-icon">💾</span>
+                <span>Save & Organize</span>
+              </div>
+            </div>
           </div>
         </div>
       </div>

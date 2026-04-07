@@ -1,7 +1,7 @@
 // src/components/Navbar.js
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { FiFilm, FiTv, FiBook, FiCompass, FiBookmark, FiSearch, FiX, FiZap, FiChevronDown, FiGlobe, FiPlayCircle, FiClock } from 'react-icons/fi';
+import { FiFilm, FiTv, FiBook, FiCompass, FiBookmark, FiSearch, FiX, FiZap, FiChevronDown, FiGlobe, FiPlayCircle, FiClock, FiUser } from 'react-icons/fi';
 import { useNavigate } from 'react-router-dom';
 import useStore from '../store/useStore';
 import './Navbar.css';
@@ -24,6 +24,7 @@ export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [query, setQuery] = useState('');
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
   const { currentUser, logoutUser } = useStore();
@@ -39,6 +40,22 @@ export default function Navbar() {
     setSearchOpen(false);
     setQuery('');
   }, [location]);
+
+  // Close user menu on route change
+  useEffect(() => {
+    setUserMenuOpen(false);
+  }, [location]);
+
+  // Close menus when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (!e.target.closest('.user-menu')) {
+        setUserMenuOpen(false);
+      }
+    };
+    document.addEventListener('click', handleClickOutside);
+    return () => document.removeEventListener('click', handleClickOutside);
+  }, []);
 
   const handleSearch = (e) => {
     e.preventDefault();
@@ -101,11 +118,29 @@ export default function Navbar() {
                 AI Pick
               </Link>
               {currentUser ? (
-                <button className="btn btn-secondary btn-sm" onClick={logoutUser} style={{ marginLeft: '0.5rem' }}>
-                  Logout ({currentUser.username})
-                </button>
+                <div className="user-menu">
+                  <button 
+                    className="btn btn-secondary btn-sm user-menu-trigger" 
+                    onClick={() => setUserMenuOpen(!userMenuOpen)}
+                    title={`Logged in as ${currentUser.username}`}
+                  >
+                    <FiUser size={14} />
+                    <FiChevronDown size={12} className={`chevron ${userMenuOpen ? 'open' : ''}`} />
+                  </button>
+                  {userMenuOpen && (
+                    <div className="user-menu-dropdown">
+                      <div className="user-info">
+                        <FiUser size={16} />
+                        <span>{currentUser.username}</span>
+                      </div>
+                      <button className="user-menu-item" onClick={logoutUser}>
+                        Logout
+                      </button>
+                    </div>
+                  )}
+                </div>
               ) : (
-                <Link to="/login" className="btn btn-secondary btn-sm" style={{ marginLeft: '0.5rem' }}>
+                <Link to="/login" className="btn btn-secondary btn-sm">
                   Login
                 </Link>
               )}            </>

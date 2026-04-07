@@ -5,7 +5,7 @@ import useStore from '../store/useStore';
 import './Login.css';
 
 export default function Login() {
-  const { loginUser, registerUser } = useStore();
+  const { loginUser, registerUser, enterGuestMode } = useStore();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -30,6 +30,16 @@ export default function Login() {
         setError('Username already exists');
         return;
       }
+      navigate('/');
+    }
+  };
+
+  const handleSkipLogin = () => {
+    const confirmed = window.confirm(
+      'You are continuing without logging in. Features like personalized recommendations, saving playlists, and ratings will not be available. Do you want to continue?'
+    );
+    if (confirmed) {
+      enterGuestMode();
       navigate('/');
     }
   };
@@ -66,6 +76,9 @@ export default function Login() {
         </form>
         <button className="btn btn-link" onClick={() => { setMode(mode === 'login' ? 'register' : 'login'); setError(''); }}>
           {mode === 'login' ? 'Create a new account' : 'Already have an account? Login'}
+        </button>
+        <button className="btn btn-secondary" onClick={handleSkipLogin}>
+          Continue as Guest
         </button>
       </div>
     </div>

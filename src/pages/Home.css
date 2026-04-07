@@ -216,3 +216,95 @@
     padding: 1.25rem;
   }
 }
+
+/* LOGIN PROMPT OVERLAY */
+.login-prompt-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, #0f0f23 0%, #1a1a2e 50%, #16213e 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 2rem;
+}
+
+.login-prompt-card {
+  background: rgba(10, 10, 20, 0.95);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 20px;
+  padding: 3rem;
+  max-width: 500px;
+  width: 100%;
+  text-align: center;
+  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5);
+}
+
+.login-prompt-icon {
+  font-size: 4rem;
+  margin-bottom: 1.5rem;
+}
+
+.login-prompt-card h1 {
+  font-family: var(--font-display);
+  font-size: 2.5rem;
+  color: var(--text-primary);
+  margin-bottom: 0.5rem;
+}
+
+.login-prompt-card p {
+  color: var(--text-secondary);
+  font-size: 1.1rem;
+  margin-bottom: 2.5rem;
+  line-height: 1.6;
+}
+
+.login-prompt-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-bottom: 2.5rem;
+}
+
+.login-prompt-actions .btn {
+  width: 100%;
+  padding: 1rem;
+  font-size: 1.1rem;
+}
+
+.login-prompt-features {
+  display: flex;
+  justify-content: center;
+  gap: 2rem;
+}
+
+.feature {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+}
+
+.feature-icon {
+  font-size: 1.5rem;
+}
+
+@media (max-width: 768px) {
+  .login-prompt-card {
+    padding: 2rem;
+  }
+  
+  .login-prompt-card h1 {
+    font-size: 2rem;
+  }
+  
+  .login-prompt-features {
+    flex-direction: column;
+    gap: 1rem;
+  }
+}

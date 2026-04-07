@@ -85,6 +85,13 @@ const useStore = create(
       // --- Auth & User List ---
       users: [],
       currentUser: null,
+      isGuest: false,
+      
+      setGuestMode: (isGuest) => set({ isGuest }),
+      
+      enterGuestMode: () => {
+        set({ currentUser: null, isGuest: true });
+      },
       loginUser: (username, password) => {
         const found = get().users.find((u) => u.username === username && u.password === password);
         if (!found) return false;
@@ -120,7 +127,7 @@ const useStore = create(
         set({ users: [...get().users, newUser], currentUser: newUser });
         return true;
       },
-      logoutUser: () => set({ currentUser: null }),
+      logoutUser: () => set({ currentUser: null, isGuest: false }),
       setActivePlaylist: (playlistId) => {
         const user = get().currentUser;
         if (!user) return;

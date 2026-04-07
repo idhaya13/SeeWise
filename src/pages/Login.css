@@ -54,6 +54,22 @@
   text-decoration: underline;
 }
 
+.btn-secondary {
+  margin-top: 0.75rem;
+  width: 100%;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #fff;
+  padding: 0.8rem;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.btn-secondary:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
 /* Password input with visibility toggle */
 .password-input-container {
   position: relative;
