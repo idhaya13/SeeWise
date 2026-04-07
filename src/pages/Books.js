@@ -148,7 +148,7 @@ export default function Books() {
         </div>
       ) : (
         <>
-          <div className="grid grid-4 fade-in">
+          <div className="grid grid-4 card-row-scroll fade-in">
             {displayBooks.map((book) => (
               <MediaCard key={book.id || book.olKey} item={book} type="book" />
             ))}

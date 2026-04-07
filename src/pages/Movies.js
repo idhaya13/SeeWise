@@ -252,7 +252,7 @@ export default function Movies() {
         </div>
       ) : (
         <>
-          <div className="grid grid-4 fade-in">
+          <div className="grid grid-4 card-row-scroll fade-in">
             {items.map((item) => (
               <MediaCard key={item.id || item.guid || item.imdbID} item={item} type={mediaType} />
             ))}
