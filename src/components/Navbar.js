@@ -130,13 +130,27 @@ export default function Navbar() {
   return (
     <nav className={`navbar ${scrolled ? 'scrolled' : ''}`}>
       <div className="navbar-inner">
-        {/* Logo */}
-        <Link to="/" className="logo">
-          <span className="logo-icon">🎬</span>
-          <span className="logo-text">
-            See<span className="logo-accent">Wise</span>
-          </span>
-        </Link>
+        {/* Brand Group */}
+        <div className="nav-brand-group">
+          {/* Mobile Menu Toggle */}
+          <button 
+            className={`mobile-menu-toggle ${mobileMenuOpen ? 'open' : ''}`}
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            aria-label="Toggle mobile menu"
+          >
+            <div className="hamburger-icon">
+              <span></span>
+            </div>
+          </button>
+
+          {/* Logo */}
+          <Link to="/" className="logo">
+            <span className="logo-icon">🎬</span>
+            <span className="logo-text">
+              See<span className="logo-accent">Wise</span>
+            </span>
+          </Link>
+        </div>
 
         {/* Nav Links - Desktop */}
         <ul className="nav-links">
@@ -155,16 +169,6 @@ export default function Navbar() {
 
         {/* Right Actions */}
         <div className="nav-actions">
-          {/* Mobile Menu Toggle */}
-          <button 
-            className={`mobile-menu-toggle ${mobileMenuOpen ? 'open' : ''}`}
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            aria-label="Toggle mobile menu"
-          >
-            <div className="hamburger-icon">
-              <span></span>
-            </div>
-          </button>
 
           {searchOpen ? (
             <form onSubmit={handleSearch} className="nav-search-form">
@@ -222,16 +226,15 @@ export default function Navbar() {
               </div>
             </form>
           ) : (
-            <>
-              <button className="btn btn-icon" onClick={() => setSearchOpen(true)} title="Search">
-                <FiSearch />
-              </button>
+            <button className="btn btn-icon" onClick={() => setSearchOpen(true)} title="Search">
+              <FiSearch />
+            </button>
+          )}
 
-
-              <Link to="/ai-recommend" className="btn btn-primary btn-sm ai-btn">
-                <FiZap size={14} />
-                AI Pick
-              </Link>
+          <Link to="/ai-recommend" className="btn btn-primary btn-sm ai-btn">
+            <FiZap size={14} />
+            <span className="btn-label">AI Pick</span>
+          </Link>
               {currentUser ? (
                 <div className="user-menu">
                   <button 
@@ -258,8 +261,7 @@ export default function Navbar() {
                 <Link to="/login" className="btn btn-secondary btn-sm">
                   Login
                 </Link>
-              )}            </>
-          )}
+              )}
         </div>
       </div>
 

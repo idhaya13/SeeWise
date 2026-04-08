@@ -27,6 +27,13 @@
   gap: 2rem;
 }
 
+/* BRAND GROUP */
+.nav-brand-group {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
 /* LOGO */
 .logo {
   display: flex;
@@ -457,6 +464,9 @@
     width: 18px;
     height: 12px;
     position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
 
   .hamburger-icon::before,
@@ -469,6 +479,7 @@
     background: var(--text-primary);
     transition: all 0.3s ease;
     border-radius: 1px;
+    left: 0;
   }
 
   .hamburger-icon::before {
@@ -485,7 +496,7 @@
   }
 
   .mobile-menu-toggle.open .hamburger-icon::before {
-    transform: rotate(45deg) translate(5px, 5px);
+    transform: translateY(5px) rotate(45deg);
   }
 
   .mobile-menu-toggle.open .hamburger-icon span {
@@ -493,7 +504,7 @@
   }
 
   .mobile-menu-toggle.open .hamburger-icon::after {
-    transform: rotate(-45deg) translate(7px, -6px);
+    transform: translateY(-5px) rotate(-45deg);
   }
 
   /* Mobile menu overlay */
@@ -547,7 +558,7 @@
     display: flex;
     align-items: center;
     gap: 0.75rem;
-    padding: 1rem;
+    padding: 0.75rem 1rem;
     border-radius: 12px;
     color: var(--text-primary);
     text-decoration: none;
