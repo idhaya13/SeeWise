@@ -148,7 +148,7 @@ export default function Books() {
         </div>
       ) : (
         <>
-          <div className="grid grid-4 card-row-scroll fade-in">
+          <div className="grid grid-4 fade-in">
             {displayBooks.map((book) => (
               <MediaCard key={book.id || book.olKey} item={book} type="book" />
             ))}
@@ -156,7 +156,7 @@ export default function Books() {
 
           {totalPages > 1 && (
             <div className="pagination-controls" style={{ marginTop: '2rem', textAlign: 'center' }}>
-              <div className="page-nav" style={{ display: 'inline-flex', gap: '0.25rem', justifyContent: 'center', overflowX: 'auto', maxWidth: '100%' }}>
+              <div className="page-nav" style={{ display: 'inline-flex', gap: '0.25rem', justifyContent: 'flex-start', overflowX: 'auto', maxWidth: '100%' }}>
                 <button 
                   className="btn btn-secondary" 
                   disabled={page <= 1 || isLoading2} 

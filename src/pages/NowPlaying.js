@@ -151,7 +151,7 @@ export default function NowPlaying() {
 
           {totalPages > 1 && (
             <div className="pagination-controls" style={{ marginTop: '1.25rem', textAlign: 'center' }}>
-              <div className="page-nav" style={{ marginBottom: '0.75rem', display: 'inline-flex', gap: '0.25rem', justifyContent: 'center', overflowX: 'auto', maxWidth: '100%' }}>
+              <div className="page-nav" style={{ marginBottom: '0.75rem', display: 'inline-flex', gap: '0.25rem', justifyContent: 'flex-start', overflowX: 'auto', maxWidth: '100%' }}>
                 <button className="btn btn-secondary" disabled={page <= 1 || loading} onClick={() => goToPage(page - 1)}>
                   Prev
                 </button>

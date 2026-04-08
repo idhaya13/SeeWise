@@ -252,14 +252,14 @@ export default function Movies() {
         </div>
       ) : (
         <>
-          <div className="grid grid-4 card-row-scroll fade-in">
+          <div className="grid grid-4 fade-in">
             {items.map((item) => (
               <MediaCard key={item.id || item.guid || item.imdbID} item={item} type={mediaType} />
             ))}
           </div>
 
           <div className="pagination-controls" style={{ marginTop: '1.25rem', textAlign: 'center' }}>
-            <div className="page-nav" style={{ marginBottom: '0.75rem', display: 'inline-flex', gap: '0.25rem', justifyContent: 'center', overflowX: 'auto', maxWidth: '100%' }}>
+            <div className="page-nav" style={{ marginBottom: '0.75rem', display: 'inline-flex', gap: '0.25rem', justifyContent: 'flex-start', overflowX: 'auto', maxWidth: '100%' }}>
               <button
                 className="btn btn-secondary"
                 disabled={page <= 1 || loading}

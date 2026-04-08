@@ -632,18 +632,24 @@ h1, h2, h3, h4, h5 {
 /* Mobile responsive pagination */
 @media (max-width: 768px) {
   .page-nav {
-    max-width: calc(100vw - 2rem);
-    padding: 0 0.5rem;
-    overflow-x: auto;
-    display: flex;
-    white-space: nowrap;
+    max-width: calc(100vw - 2rem) !important;
+    padding: 0 0.5rem !important;
+    overflow-x: auto !important;
+    display: flex !important;
+    flex-direction: row !important;
+    white-space: nowrap !important;
+    align-items: center;
   }
   
-  .page-nav button {
-    min-width: 40px;
-    padding: 0.5rem 0.75rem;
-    font-size: 0.85rem;
-    flex-shrink: 0;
+  .page-nav button, .page-nav .btn {
+    width: auto !important;
+    max-width: none !important;
+    min-width: 40px !important;
+    padding: 0.5rem 0.75rem !important;
+    font-size: 0.85rem !important;
+    flex-shrink: 0 !important;
+    flex-grow: 0 !important;
+    display: inline-flex !important;
   }
 }
 
