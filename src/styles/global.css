@@ -194,6 +194,31 @@ h1, h2, h3, h4, h5 {
   }
 }
 
+.scroll-row {
+  display: flex;
+  overflow-x: auto;
+  gap: 1.25rem;
+  padding-bottom: 1rem;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none; /* Hide scrollbar for Firefox */
+}
+
+.scroll-row::-webkit-scrollbar {
+  display: none; /* Hide scrollbar for Chrome/Safari */
+}
+
+.scroll-row > * {
+  flex: 0 0 auto;
+  width: 200px; /* Default desktop width for cards in a row */
+  scroll-snap-align: start;
+}
+
+@media (max-width: 768px) {
+  .scroll-row > * {
+    width: 160px; /* Smaller card width on mobile */
+  }
+}
+
 .flex {
   display: flex;
 }
