@@ -440,6 +440,10 @@
     min-width: 0;
   }
 
+  .ai-btn .btn-label {
+    display: none;
+  }
+
   /* Mobile hamburger menu - positioned next to nav-actions */
   .mobile-menu-toggle {
     display: flex;
