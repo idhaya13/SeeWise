@@ -4,6 +4,7 @@
   "description": "AI-powered Movie & Book recommendation app",
   "private": true,
   "dependencies": {
+    "@supabase/supabase-js": "^2.103.0",
     "axios": "^1.14.0",
     "framer-motion": "^11.0.5",
     "react": "^18.2.0",

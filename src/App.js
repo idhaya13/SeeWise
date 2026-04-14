@@ -1,5 +1,5 @@
 // src/App.js
-import React from 'react';
+import React, { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from 'react-query';
 import { Toaster } from 'react-hot-toast';
@@ -19,6 +19,9 @@ import Kids from './pages/Kids';
 import QuickWatch from './pages/QuickWatch';
 import Login from './pages/Login';
 
+import useStore from './store/useStore';
+import { supabase } from './services/supabase';
+
 import './styles/global.css';
 
 const queryClient = new QueryClient({
@@ -33,6 +36,22 @@ const queryClient = new QueryClient({
 });
 
 function App() {
+  const syncUserFromSupabase = useStore((state) => state.syncUserFromSupabase);
+
+  useEffect(() => {
+    // Initial sync
+    syncUserFromSupabase();
+
+    // Listen for auth changes (login/logout events from Supabase directly)
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      syncUserFromSupabase();
+    });
+
+    return () => {
+      subscription?.unsubscribe();
+    };
+  }, [syncUserFromSupabase]);
+
   return (
     <QueryClientProvider client={queryClient}>
       <Router>

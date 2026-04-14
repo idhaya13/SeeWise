@@ -6,32 +6,45 @@ import './Login.css';
 
 export default function Login() {
   const { loginUser, registerUser, enterGuestMode } = useStore();
-  const [username, setUsername] = useState('');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [mode, setMode] = useState('login');
   const [error, setError] = useState('');
   const navigate = useNavigate();
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    setError('');
+    setLoading(true);
+    
     if (mode === 'login') {
-      if (!loginUser(username, password)) {
-        setError('Invalid username/password');
-        return;
-      }
-      navigate('/');
-    } else {
-      if (!username || !password) {
+      if (!email || !password) {
         setError('Both fields are required');
+        setLoading(false);
         return;
       }
-      if (!registerUser(username, password)) {
-        setError('Username already exists');
+      const response = await loginUser(email, password);
+      if (!response.success) {
+        setError(response.error || 'Invalid email or password');
+      } else {
+        navigate('/');
+      }
+    } else {
+      if (!email || !password) {
+        setError('Both fields are required');
+        setLoading(false);
         return;
       }
-      navigate('/');
+      const response = await registerUser(email, password);
+      if (!response.success) {
+        setError(response.error || 'An error occurred during registration');
+      } else {
+        navigate('/');
+      }
     }
+    setLoading(false);
   };
 
   const handleSkipLogin = () => {
@@ -50,8 +63,8 @@ export default function Login() {
         <h2>{mode === 'login' ? 'Sign In' : 'Create Account'}</h2>
         <form onSubmit={handleSubmit}>
           <label>
-            Username
-            <input value={username} onChange={(e) => setUsername(e.target.value)} />
+            Email Address
+            <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" required />
           </label>
           <label>
             Password
@@ -72,7 +85,9 @@ export default function Login() {
             </div>
           </label>
           {error && <p className="error-message">{error}</p>}
-          <button type="submit" className="btn btn-primary">{mode === 'login' ? 'Login' : 'Register'}</button>
+          <button type="submit" className="btn btn-primary" disabled={loading}>
+            {loading ? 'Processing...' : (mode === 'login' ? 'Login' : 'Register')}
+          </button>
         </form>
         <button className="btn btn-link" onClick={() => { setMode(mode === 'login' ? 'register' : 'login'); setError(''); }}>
           {mode === 'login' ? 'Create a new account' : 'Already have an account? Login'}

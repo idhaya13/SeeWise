@@ -1,6 +1,6 @@
-// src/store/useStore.js
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import { supabase } from '../services/supabase';
 
 const useStore = create(
   persist(
@@ -92,42 +92,102 @@ const useStore = create(
       enterGuestMode: () => {
         set({ currentUser: null, isGuest: true });
       },
-      loginUser: (username, password) => {
-        const found = get().users.find((u) => u.username === username && u.password === password);
-        if (!found) return false;
+      loginUser: async (email, password) => {
+        const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+        if (error) return { success: false, error: error.message };
+        
+        const user = data.user;
         const normalized = {
-          ...found,
-          playlists: found.playlists || [{ id: 'playlist-default', name: 'Default List', items: [] }],
-          activePlaylistId: found.activePlaylistId || (found.playlists?.[0]?.id || 'playlist-default'),
-          ratings: found.ratings || {},
-          savedList: found.savedList || [],
-        };
-        set({
-          currentUser: normalized,
-          users: get().users.map((u) => (u.id === normalized.id ? normalized : u)),
-        });
-        return true;
-      },
-      registerUser: (username, password) => {
-        if (get().users.some((u) => u.username === username)) return false;
-        const defaultPlaylist = {
-          id: 'playlist-default',
-          name: 'Default List',
-          items: [],
-        };
-        const newUser = {
-          id: Date.now().toString(),
-          username,
-          password,
-          savedList: [],
-          playlists: [defaultPlaylist],
-          activePlaylistId: defaultPlaylist.id,
+          id: user.id,
+          email: user.email,
+          username: user.email?.split('@')[0] || 'User',
+          playlists: [{ id: 'playlist-default', name: 'Default List', items: [] }],
+          activePlaylistId: 'playlist-default',
           ratings: {},
+          savedList: [],
         };
-        set({ users: [...get().users, newUser], currentUser: newUser });
-        return true;
+        set({ currentUser: normalized });
+        return { success: true };
       },
-      logoutUser: () => set({ currentUser: null, isGuest: false }),
+      registerUser: async (email, password) => {
+        const { data, error } = await supabase.auth.signUp({ email, password });
+        if (error) return { success: false, error: error.message };
+        
+        if (data.user && !data.session) {
+          return { success: false, error: 'Registration successful! Please confirm your email.' };
+        }
+        
+        const user = data.user;
+        const normalized = {
+          id: user.id,
+          email: user.email,
+          username: user.email?.split('@')[0] || 'User',
+          playlists: [{ id: 'playlist-default', name: 'Default List', items: [] }],
+          activePlaylistId: 'playlist-default',
+          ratings: {},
+          savedList: [],
+        };
+        set({ currentUser: normalized });
+        return { success: true };
+      },
+      logoutUser: async () => {
+        await supabase.auth.signOut();
+        set({ currentUser: null, isGuest: false });
+      },
+      syncUserFromSupabase: async () => {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) {
+           // Also clear if no session
+           if (get().currentUser) set({ currentUser: null });
+           return;
+        }
+        
+        const user = session.user;
+        
+        // Fetch from Supabase
+        const { data: playlistsData } = await supabase.from('playlists').select('*').eq('user_id', user.id);
+        const { data: itemsData } = await supabase.from('playlist_items').select('*').eq('user_id', user.id);
+        const { data: ratingsData } = await supabase.from('ratings').select('*').eq('user_id', user.id);
+        const { data: commentsData } = await supabase.from('comments').select('*').eq('user_id', user.id);
+
+        // Map items to playlists
+        let playlists = [];
+        if (playlistsData && playlistsData.length > 0) {
+           playlists = playlistsData.map(p => ({
+               id: p.id,
+               name: p.name,
+               items: itemsData ? itemsData.filter(i => i.playlist_id === p.id).map(i => i.item_data) : []
+           }));
+        } else {
+           // Insert default playlist for new users if none exists
+           const { data: defaultList } = await supabase.from('playlists').insert({ user_id: user.id, name: 'Default List' }).select().single();
+           if (defaultList) {
+               playlists = [{ id: defaultList.id, name: defaultList.name, items: [] }];
+           }
+        }
+        
+        const ratingsMap = {};
+        if (ratingsData) ratingsData.forEach(r => ratingsMap[r.item_id] = r.rating);
+
+        const commentsMap = {};
+        if (commentsData) commentsData.forEach(c => {
+           if (!commentsMap[c.item_id]) commentsMap[c.item_id] = [];
+           commentsMap[c.item_id].push(c);
+        });
+        
+        const normalizedUser = {
+          id: user.id,
+          email: user.email,
+          username: user.email?.split('@')[0] || 'User',
+          playlists,
+          activePlaylistId: playlists[0]?.id || 'playlist-default',
+          ratings: ratingsMap,
+          comments: commentsMap,
+          savedList: playlists[0]?.items || []
+        };
+        
+        set({ currentUser: normalizedUser });
+      },
       setActivePlaylist: (playlistId) => {
         const user = get().currentUser;
         if (!user) return;
@@ -137,69 +197,87 @@ const useStore = create(
         const updatedUser = { ...user, activePlaylistId: playlistId, playlists };
         set({ currentUser: updatedUser, users: get().users.map((u) => (u.id === user.id ? updatedUser : u)) });
       },
-      createPlaylist: (name) => {
+      createPlaylist: async (name) => {
         const user = get().currentUser;
         if (!name.trim()) return;
-        const playlistId = `playlist-${Date.now()}`;
-        const newPlaylist = { id: playlistId, name: name.trim(), items: [] };
         
         if (user) {
-          const playlists = Array.isArray(user.playlists) ? user.playlists : [];
-          const updatedUser = {
-            ...user,
-            playlists: [...playlists, newPlaylist],
-            activePlaylistId: playlistId,
-          };
-          set({ currentUser: updatedUser, users: get().users.map((u) => (u.id === user.id ? updatedUser : u)) });
+          const { data, error } = await supabase.from('playlists').insert({ user_id: user.id, name: name.trim() }).select().single();
+          if (!error && data) {
+            const newPlaylist = { id: data.id, name: data.name, items: [] };
+            const playlists = Array.isArray(user.playlists) ? user.playlists : [];
+            const updatedUser = {
+              ...user,
+              playlists: [...playlists, newPlaylist],
+              activePlaylistId: data.id,
+            };
+            set({ currentUser: updatedUser });
+          }
         } else {
+          const playlistId = `playlist-${Date.now()}`;
+          const newPlaylist = { id: playlistId, name: name.trim(), items: [] };
           set({ guestPlaylists: [...get().guestPlaylists, newPlaylist] });
         }
       },
-      deletePlaylist: (playlistId) => {
+      deletePlaylist: async (playlistId) => {
         const user = get().currentUser;
         if (!user || playlistId === 'playlist-default') return;
+        
         const playlists = Array.isArray(user.playlists) ? user.playlists : [];
         const updatedPlaylists = playlists.filter((pl) => pl.id !== playlistId);
         const activePlaylistId = user.activePlaylistId === playlistId ? (updatedPlaylists[0]?.id || 'playlist-default') : user.activePlaylistId;
+        
         const updatedUser = { ...user, playlists: updatedPlaylists, activePlaylistId };
-        set({ currentUser: updatedUser, users: get().users.map((u) => (u.id === user.id ? updatedUser : u)) });
+        set({ currentUser: updatedUser });
+        
+        await supabase.from('playlists').delete().eq('id', playlistId).eq('user_id', user.id);
       },
-      addToPlaylist: (itemId, item, playlistId) => {
+      addToPlaylist: async (itemId, item, playlistId) => {
         const user = get().currentUser;
         if (!playlistId) return;
         
         if (user) {
           const playlists = user.playlists.map((pl) => {
             if (pl.id !== playlistId) return pl;
-            if (pl.items.some((i) => (i.id || i.imdbID || i.olKey) === itemId)) return pl;
+            if (pl.items.some((i) => String(i.id || i.imdbID || i.olKey) === String(itemId))) return pl;
             return { ...pl, items: [...pl.items, item] };
           });
           const updatedUser = { ...user, playlists };
-          set({ currentUser: updatedUser, users: get().users.map((u) => (u.id === user.id ? updatedUser : u)) });
+          set({ currentUser: updatedUser });
+          
+          await supabase.from('playlist_items').insert({
+             playlist_id: playlistId,
+             user_id: user.id,
+             item_id: String(itemId),
+             item_type: item.media_type || item.type || 'movie',
+             item_data: item
+          });
         } else {
           const playlists = get().guestPlaylists.map((pl) => {
             if (pl.id !== playlistId) return pl;
-            if (pl.items.some((i) => (i.id || i.imdbID || i.olKey) === itemId)) return pl;
+            if (pl.items.some((i) => String(i.id || i.imdbID || i.olKey) === String(itemId))) return pl;
             return { ...pl, items: [...pl.items, item] };
           });
           set({ guestPlaylists: playlists });
         }
       },
-      removeFromPlaylist: (itemId, playlistId) => {
+      removeFromPlaylist: async (itemId, playlistId) => {
         const user = get().currentUser;
         if (!playlistId) return;
         
         if (user) {
           const playlists = user.playlists.map((pl) => {
             if (pl.id !== playlistId) return pl;
-            return { ...pl, items: pl.items.filter((i) => (i.id || i.imdbID || i.olKey) !== itemId) };
+            return { ...pl, items: pl.items.filter((i) => String(i.id || i.imdbID || i.olKey) !== String(itemId)) };
           });
           const updatedUser = { ...user, playlists };
-          set({ currentUser: updatedUser, users: get().users.map((u) => (u.id === user.id ? updatedUser : u)) });
+          set({ currentUser: updatedUser });
+          
+          await supabase.from('playlist_items').delete().eq('playlist_id', playlistId).eq('item_id', String(itemId));
         } else {
           const playlists = get().guestPlaylists.map((pl) => {
             if (pl.id !== playlistId) return pl;
-            return { ...pl, items: pl.items.filter((i) => (i.id || i.imdbID || i.olKey) !== itemId) };
+            return { ...pl, items: pl.items.filter((i) => String(i.id || i.imdbID || i.olKey) !== String(itemId)) };
           });
           set({ guestPlaylists: playlists });
         }
@@ -239,7 +317,7 @@ const useStore = create(
       },
       // --- Ratings ---
       ratings: {}, // global fallback for unauthenticated users
-      setRating: (itemId, rating) => {
+      setRating: async (itemId, rating) => {
         const user = get().currentUser;
         if (user) {
           const updatedUser = {
@@ -249,10 +327,13 @@ const useStore = create(
               [itemId]: rating,
             },
           };
-          set({
-            currentUser: updatedUser,
-            users: get().users.map((u) => (u.id === user.id ? updatedUser : u)),
-          });
+          set({ currentUser: updatedUser });
+          
+          await supabase.from('ratings').upsert({
+            user_id: user.id,
+            item_id: String(itemId),
+            rating: rating
+          }, { onConflict: 'user_id, item_id' });
         } else {
           set({ ratings: { ...get().ratings, [itemId]: rating } });
         }
@@ -265,7 +346,7 @@ const useStore = create(
 
       // --- Comments ---
       comments: {}, // global fallback for unauthenticated users
-      addComment: (itemId, comment) => {
+      addComment: async (itemId, comment) => {
         const user = get().currentUser;
         const commentData = {
           id: Date.now().toString(),
@@ -283,9 +364,16 @@ const useStore = create(
               [itemId]: [...(userComments[itemId] || []), commentData],
             },
           };
-          set({
-            currentUser: updatedUser,
-            users: get().users.map((u) => (u.id === user.id ? updatedUser : u)),
+          set({ currentUser: updatedUser });
+          
+          // Using raw timestamp or generate it, we insert to supabase.
+          // Note commentData.id is fake, we omit it.
+          await supabase.from('comments').insert({
+            user_id: user.id,
+            username: user.username,
+            item_id: String(itemId),
+            text: comment,
+            timestamp: commentData.timestamp
           });
         } else {
           const globalComments = get().comments;
