@@ -271,6 +271,7 @@ h5 {
 
 .media-card {
   position: relative;
+  display: block;
   cursor: pointer;
   border-radius: var(--radius);
   overflow: hidden;

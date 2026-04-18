@@ -183,19 +183,11 @@ export default function MyList() {
           <p className="mylist-count">{items.length} item{items.length !== 1 ? 's' : ''}</p>
           <div className="grid grid-4 fade-in">
             {items.map((item) => (
-              <div key={item.id} className="mylist-item-wrapper">
-                <MediaCard
-                  item={item}
-                  type={item.mediaType || 'movie'}
-                />
-                <button
-                  className="remove-btn"
-                  onClick={() => handleRemove(item)}
-                  title="Remove"
-                >
-                  <FiTrash2 size={14} />
-                </button>
-              </div>
+              <MediaCard
+                key={item.id}
+                item={item}
+                type={item.mediaType || 'movie'}
+              />
             ))}
           </div>
         </div>
