@@ -102,18 +102,9 @@ export const aiService = {
         }
 
         const languageMap = {
-            'hi': 'Hindi',
-            'es': 'Spanish',
-            'fr': 'French',
-            'de': 'German',
-            'ja': 'Japanese',
-            'ko': 'Korean',
-            'te': 'Telugu',
-            'ta': 'Tamil',
-            'ml': 'Malayalam',
-            'kn': 'Kannada',
-            'mr': 'Marathi',
-            'en': 'English'
+            'hi': 'Hindi', 'es': 'Spanish', 'fr': 'French', 'de': 'German',
+            'ja': 'Japanese', 'ko': 'Korean', 'te': 'Telugu', 'ta': 'Tamil',
+            'ml': 'Malayalam', 'kn': 'Kannada', 'mr': 'Marathi', 'en': 'English'
         };
         const targetLang = languageMap[language] || 'English';
 
@@ -143,6 +134,79 @@ Required JSON structure (NO OTHER TEXT):
   }
 ]
 Output ONLY the JSON. No markdown fences.`;
+    },
+
+    async getForYouRecommendations({ profileContext, sectionFlavor, language = 'en' }) {
+        const apiKey = process.env.REACT_APP_GEMINI_API_KEY;
+        if (!apiKey || apiKey === 'your_gemini_api_key_here') {
+            return aiService.getMockRecommendations({ mood: 'For You', type: 'all' });
+        }
+
+        const prompt = aiService.generateForYouPrompt({ profileContext, sectionFlavor, language });
+
+        try {
+            const response = await fetch(`${GEMINI_API_BASE}?key=${apiKey}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    contents: [{ parts: [{ text: prompt }] }],
+                    generationConfig: { temperature: 0.75, topK: 40, topP: 0.95, maxOutputTokens: 2048 },
+                }),
+            });
+
+            if (!response.ok) throw new Error('Gemini API Error');
+            const data = await response.json();
+            const rawText = data.candidates?.[0]?.content?.parts?.[0]?.text || '[]';
+            const startIdx = rawText.indexOf('[');
+            const endIdx = rawText.lastIndexOf(']');
+            if (startIdx === -1 || endIdx === -1) throw new Error('Invalid JSON array');
+            const cleanText = rawText.substring(startIdx, endIdx + 1);
+            
+            const parsed = JSON.parse(cleanText);
+            return parsed.slice(0, 6); // Top 6 for dashboard blocks
+        } catch (err) {
+            console.error('ForYou AI Error:', err.message);
+            return aiService.getMockRecommendations({ mood: 'For You', type: 'all' }).slice(0, 6);
+        }
+    },
+
+    generateForYouPrompt({ profileContext, sectionFlavor, language }) {
+        const languageMap = {
+            'hi': 'Hindi', 'es': 'Spanish', 'fr': 'French', 'de': 'German',
+            'ja': 'Japanese', 'ko': 'Korean', 'te': 'Telugu', 'ta': 'Tamil',
+            'ml': 'Malayalam', 'kn': 'Kannada', 'mr': 'Marathi', 'en': 'English'
+        };
+        const targetLang = languageMap[language] || 'English';
+
+        return `System: You are an elite content curation algorithm. Return exactly 6 outstanding recommendations in a strict JSON array.
+Language & Region: Target ${targetLang} movies, TV shows, or books (but return output text in English).
+
+User Profile Snapshot:
+- Highly Rated by User: ${profileContext.topRated?.join(', ') || 'None yet'}
+- Saved/Bookmarked: ${profileContext.savedItems?.join(', ') || 'None yet'}
+- Recently Highlighted/Searched: ${profileContext.aiHistory?.join(', ') || 'None yet'}
+
+Goal Selection Strategy:
+${sectionFlavor === 'gems' ? 'Strictly find EXTREMELY obscure, underground, or highly overlooked works. absolutely NO mainstream or popular titles (e.g., no Breaking Bad, no Interstellar, no widely known bestsellers). These MUST be true hidden gems with very low general awareness but exceptionally high quality.' : 
+ sectionFlavor === 'similar' ? 'Pick the most highly recognizable and prestigious similar works they MUST experience next.' : 
+ 'Provide a perfectly balanced, top-tier general recommendation list crossing movies, TV, and books.'}
+
+Rules:
+- DO NOT recommend anything already mentioned in their Profile Snapshot!
+- DO NOT hallucinate works. Only use real acclaimed works.
+
+Required JSON structure (NO OTHER TEXT, just raw JSON array of objects):
+[
+  {
+    "title": "Title Name",
+    "type": "movie" | "tv" | "book",
+    "reason": "One brilliant sentence explaining exactly WHY this matches their specific history",
+    "mood": "One vibe word",
+    "year": "YYYY",
+    "genre": "Genre",
+    "author_or_director": "Creator Name"
+  }
+]`;
     },
 
     getMockRecommendations({ mood, genre, type }) {

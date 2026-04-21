@@ -1,7 +1,7 @@
 // src/components/Navbar.js
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { FiFilm, FiTv, FiBook, FiCompass, FiBookmark, FiSearch, FiX, FiZap, FiChevronDown, FiGlobe, FiPlayCircle, FiClock, FiUser } from 'react-icons/fi';
+import { FiFilm, FiTv, FiBook, FiBookmark, FiSearch, FiX, FiZap, FiChevronDown, FiGlobe, FiPlayCircle, FiClock, FiUser, FiHeart } from 'react-icons/fi';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from 'react-query';
 import useStore from '../store/useStore';
@@ -13,13 +13,13 @@ import './Navbar.css';
 
 const NAV_LINKS = [
   { to: '/', label: 'Home', icon: null },
+  { to: '/for-you', label: 'For You', icon: <FiHeart /> },
   { to: '/movies', label: 'Movies', icon: <FiFilm /> },
   { to: '/tv', label: 'TV Shows', icon: <FiTv /> },
   { to: '/now-playing', label: 'In Theaters', icon: <FiPlayCircle /> },
   { to: '/kids', label: 'Kids', icon: <span style={{fontSize: '1em'}}>🧸</span> },
   { to: '/books', label: 'Books', icon: <FiBook /> },
   { to: '/quick-watch', label: 'QuickWatch', icon: <FiClock /> },
-  { to: '/discover', label: 'Discover', icon: <FiCompass /> },
   { to: '/my-list', label: 'My List', icon: <FiBookmark /> },
 ];
 

@@ -17,6 +17,7 @@ import AIRecommend from './pages/AIRecommend';
 import NowPlaying from './pages/NowPlaying';
 import Kids from './pages/Kids';
 import QuickWatch from './pages/QuickWatch';
+import ForYou from './pages/ForYou';
 import Login from './pages/Login';
 
 import useStore from './store/useStore';
@@ -61,6 +62,7 @@ function App() {
           <main className="main-content">
             <Routes>
               <Route path="/" element={<Home />} />
+              <Route path="/for-you" element={<ForYou />} />
               <Route path="/movies" element={<Movies />} />
               <Route path="/tv" element={<Movies />} />
               <Route path="/books" element={<Books />} />

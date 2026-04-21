@@ -76,13 +76,19 @@ export default function MovieDetail() {
     const encodedTitle = encodeURIComponent(title);
     if (name.includes('netflix')) return `https://www.netflix.com/search?q=${encodedTitle}`;
     if (name.includes('amazon prime') || name.includes('prime video')) return `https://www.amazon.com/s?k=${encodedTitle}&i=instant-video`;
-    if (name.includes('disney')) return `https://www.disneyplus.com/search?q=${encodedTitle}`;
+    if (name.includes('disney') || name.includes('hotstar')) return `https://www.hotstar.com/in/explore/search?q=${encodedTitle}`;
     if (name.includes('hulu')) return `https://www.hulu.com/search?q=${encodedTitle}`;
     if (name.includes('max') || name.includes('hbo')) return `https://play.max.com/search/${encodedTitle}`;
     if (name.includes('apple tv')) return `https://tv.apple.com/search?term=${encodedTitle}`;
     if (name.includes('peacock')) return `https://www.peacocktv.com/search?q=${encodedTitle}`;
     if (name.includes('youtube')) return `https://www.youtube.com/results?search_query=${encodedTitle}+movie`;
     if (name.includes('google play')) return `https://play.google.com/store/search?q=${encodedTitle}&c=movies`;
+    if (name.includes('jiocinema')) return `https://www.jiocinema.com/search/${encodedTitle}`;
+    if (name.includes('zee5')) return `https://www.zee5.com/search?q=${encodedTitle}`;
+    if (name.includes('sony liv') || name.includes('sonyliv')) return `https://www.sonyliv.com/search?query=${encodedTitle}`;
+    if (name.includes('sun nxt')) return `https://www.sunnxt.com/search/${encodedTitle}`;
+    if (name.includes('aha')) return `https://www.aha.video/search?q=${encodedTitle}`;
+    if (name.includes('crunchyroll')) return `https://www.crunchyroll.com/search?q=${encodedTitle}`;
     return defaultLink;
   };
 
@@ -189,7 +195,7 @@ export default function MovieDetail() {
                   .slice(0, 2)
                   .map((c) => (
                     <div key={c.id} className="crew-member">
-                       <span className="crew-role">{c.job}</span>
+                      <span className="crew-role">{c.job}</span>
                       <span className="crew-name">{c.name}</span>
                     </div>
                   ))}
@@ -199,12 +205,12 @@ export default function MovieDetail() {
             {/* Actions */}
             <div className="detail-actions">
               {isInTheaters && (
-                <a 
+                <a
                   href={`https://www.google.com/search?q=BookMyShow+tickets+${encodeURIComponent(title)}`}
-                  target="_blank" 
+                  target="_blank"
                   rel="noreferrer"
                   className="btn btn-primary btn-lg"
-                  style={{ backgroundColor: '#F84464', color: '#fff', borderColor: '#F84464' }} 
+                  style={{ backgroundColor: '#F84464', color: '#fff', borderColor: '#F84464' }}
                 >
                   🎟️ Book Tickets
                 </a>
@@ -252,37 +258,37 @@ export default function MovieDetail() {
         {(streamProviders.length > 0 || rentBuyProviders.length > 0) && (
           <section className="section providers-section">
             <h2 className="section-title">📺 Where to Watch</h2>
-             {streamProviders.length > 0 && (
-               <div className="providers-group">
-                 <h3 className="providers-group-title">Stream</h3>
-                 <div className="providers-list">
-                   {streamProviders.map(p => (
-                     <a href={getDirectPlatformLink(p.provider_name, providerLink)} target="_blank" rel="noreferrer" key={`stream-${p.provider_id}`} className="provider-item" title={p.provider_name}>
-                       <img src={tmdbService.getImageUrl(p.logo_path, 'w92')} alt={p.provider_name} className="provider-logo" />
-                       <span className="provider-name">{p.provider_name}</span>
-                     </a>
-                   ))}
-                 </div>
-               </div>
-             )}
-             {rentBuyProviders.length > 0 && (
-               <div className="providers-group">
-                 <h3 className="providers-group-title">Rent / Buy</h3>
-                 <div className="providers-list">
-                   {rentBuyProviders.map(p => (
-                     <a href={getDirectPlatformLink(p.provider_name, providerLink)} target="_blank" rel="noreferrer" key={`rentbuy-${p.provider_id}`} className="provider-item" title={p.provider_name}>
-                       <img src={tmdbService.getImageUrl(p.logo_path, 'w92')} alt={p.provider_name} className="provider-logo" />
-                       <span className="provider-name">{p.provider_name}</span>
-                     </a>
-                   ))}
-                 </div>
-               </div>
-             )}
-             {providerLink && (
-               <a href={providerLink} target="_blank" rel="noreferrer" className="provider-link-btn">
-                 View all options on TMDB
-               </a>
-             )}
+            {streamProviders.length > 0 && (
+              <div className="providers-group">
+                <h3 className="providers-group-title">Stream</h3>
+                <div className="providers-list">
+                  {streamProviders.map(p => (
+                    <a href={getDirectPlatformLink(p.provider_name, providerLink)} target="_blank" rel="noreferrer" key={`stream-${p.provider_id}`} className="provider-item" title={p.provider_name}>
+                      <img src={tmdbService.getImageUrl(p.logo_path, 'w92')} alt={p.provider_name} className="provider-logo" />
+                      <span className="provider-name">{p.provider_name}</span>
+                    </a>
+                  ))}
+                </div>
+              </div>
+            )}
+            {rentBuyProviders.length > 0 && (
+              <div className="providers-group">
+                <h3 className="providers-group-title">Rent / Buy</h3>
+                <div className="providers-list">
+                  {rentBuyProviders.map(p => (
+                    <a href={getDirectPlatformLink(p.provider_name, providerLink)} target="_blank" rel="noreferrer" key={`rentbuy-${p.provider_id}`} className="provider-item" title={p.provider_name}>
+                      <img src={tmdbService.getImageUrl(p.logo_path, 'w92')} alt={p.provider_name} className="provider-logo" />
+                      <span className="provider-name">{p.provider_name}</span>
+                    </a>
+                  ))}
+                </div>
+              </div>
+            )}
+            {providerLink && (
+              <a href={providerLink} target="_blank" rel="noreferrer" className="provider-link-btn">
+                View all options on TMDB
+              </a>
+            )}
           </section>
         )}
 

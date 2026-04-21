@@ -1,0 +1,120 @@
+/* src/pages/ForYou.css */
+
+.foryou-page {
+  padding-bottom: 5rem;
+}
+
+.foryou-header {
+  position: relative;
+  padding: 4rem 2rem;
+  border-radius: var(--radius-lg);
+  margin-top: 2rem;
+  margin-bottom: 3rem;
+  overflow: hidden;
+  background: linear-gradient(135deg, rgba(16, 16, 24, 0.9), rgba(16, 16, 24, 0.4));
+  border: 1px solid var(--border);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+}
+
+.foryou-header::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--accent), var(--teal), transparent);
+  opacity: 0.7;
+}
+
+.foryou-header-glow {
+  position: absolute;
+  top: -50%;
+  left: -20%;
+  width: 100%;
+  height: 200%;
+  background: radial-gradient(circle at top left, var(--accent-glow) 0%, transparent 60%);
+  opacity: 0.2;
+  pointer-events: none;
+}
+
+.foryou-header-content {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.foryou-icon-badge {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--accent-dim), rgba(45, 212, 191, 0.15));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--accent);
+  box-shadow: 0 0 30px var(--accent-glow);
+  border: 1px solid var(--accent-dim);
+}
+
+.foryou-title {
+  margin-bottom: 0.5rem;
+  font-size: clamp(2rem, 4vw, 3rem);
+}
+
+.foryou-subtitle {
+  color: var(--text-secondary);
+  font-size: 1.1rem;
+  max-width: 600px;
+}
+
+.foryou-section {
+  margin-bottom: 4rem;
+}
+
+.foryou-section-header {
+  margin-bottom: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.foryou-section-title {
+  font-family: var(--font-display);
+  font-size: 1.75rem;
+  font-weight: 700;
+}
+
+.foryou-section-desc {
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+}
+
+/* Loading state for horizontal rail */
+.rail-loading {
+  display: flex;
+  gap: 1.25rem;
+  overflow: hidden;
+  padding-bottom: 1rem;
+}
+
+.foryou-empty {
+  text-align: center;
+  padding: 5rem 1rem;
+  background: var(--surface);
+  border-radius: var(--radius-lg);
+  border: 1px dashed var(--border);
+}
+
+.foryou-empty h3 {
+  font-size: 1.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.foryou-empty p {
+  color: var(--text-secondary);
+  margin-bottom: 1.5rem;
+}
